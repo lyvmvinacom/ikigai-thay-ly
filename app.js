@@ -32,7 +32,7 @@ function chibiSVG(kind='student',variant=0,gender='male',outfit=0,expression=0){
  // Original transparent character art generated for IKIGAI WORLD.
  // Two distinct illustrated looks per gender; outfit selection switches the illustrated base.
  let asset;
- if(teacher) asset='male_school.png';
+ if(teacher) asset='teacher_lee.png';
  else if(female) asset=(Number(outfit)%2===1||Number(variant)%2===1)?'female_glasses.png':'female_pink.png';
  else asset=(Number(outfit)%2===1||Number(variant)%2===1)?'male_hoodie.png':'male_school.png';
  const emotes=['','😉','😮','😂','😏'];
