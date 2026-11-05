@@ -425,7 +425,7 @@ function jftLoadHistory(){try{return JSON.parse(localStorage.getItem(JFT_STORE)|
 function jftSaveHistory(item){const h=jftLoadHistory();h.unshift(item);localStorage.setItem(JFT_STORE,JSON.stringify(h.slice(0,100)))}
 async function openJFT(){
  try{
-  if(!jftData){const r=await fetch('assets/jft/answer-key.json');if(!r.ok)throw new Error('Không tải được dữ liệu đề');jftData=await r.json()}
+  if(!jftData){const r=await fetch('https://raw.githubusercontent.com/lyvmvinacom/ikigai-thay-ly/main/assets/jft/answer-key.json');if(!r.ok)throw new Error('Không tải được dữ liệu đề');jftData=await r.json()}
   const hist=jftLoadHistory();
   showPanel('🎓 IKIGAI · Thi thử JFT-Basic A2',`
    <p>10 đề thi thử · 50 câu/đề · 60 phút/đề · gồm 4 phần theo tài liệu.</p>
