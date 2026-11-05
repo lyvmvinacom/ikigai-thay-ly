@@ -262,12 +262,20 @@ async function loadBank(category=null,lessonNo=null){
  if(error)throw error;return data||[];
 }
 function categoryLabel(c){return ({vocabulary:'Từ vựng',grammar:'Ngữ pháp',kanji:'Kanji',reading:'Đọc hiểu',listening:'Nghe hiểu',kaiwa:'Hội thoại'})[c]||c}
+function cleanExplanation(value){
+ const banned='Đối chiếu danh sách Kanji tu vung ngu phap N5 IKIGAI gửi; câu hỏi kiểm tra cách đọc Hiragana của từ Kanji.';
+ return String(value??'').replace(/\*\*/g,'').replace(banned,'').replace(/\s{2,}/g,' ').trim().replace(/^[;；、,\s]+|[;；、,\s]+$/g,'');
+}
+
 async function openLessons(){
  try{
   const rows=await loadBank();
   if(rows.length){
    dbQuestions=rows;
-   const groups=[...new Map(rows.map(q=>[q.category+'-'+q.lesson_no,{category:q.category,lesson_no:q.lesson_no,count:rows.filter(x=>x.category===q.category&&x.lesson_no===q.lesson_no).length}])).values()];
+   const groups=[...new Map(rows.map(q=>[q.category+'-'+q.lesson_no,{category:q.category,lesson_no:Number(q.lesson_no)||0,count:rows.filter(x=>x.category===q.category&&Number(x.lesson_no)===Number(q.lesson_no)).length}])).values()];
+    const order={kanji:0,vocabulary:1,grammar:2};
+    groups.sort((a,b)=>(order[a.category]??9)-(order[b.category]??9)||
+      (a.category==='kanji'?(a.lesson_no===0?99:b.lesson_no===0?-99:a.lesson_no-b.lesson_no):a.lesson_no-b.lesson_no));
    showPanel('📚 Ngân hàng luyện tập N5',`<p>Chọn nội dung muốn luyện. Dữ liệu được tải từ ngân hàng IKIGAI.</p><div class="choices">${groups.map(g=>`<button class="choice" data-dbcat="${g.category}" data-dblesson="${g.lesson_no}">${categoryLabel(g.category)} · ${g.lesson_no===0?'Tổng hợp':'Bài '+g.lesson_no}<br><small>${g.count} câu hỏi</small></button>`).join('')}</div>`);
    document.querySelectorAll('[data-dbcat]').forEach(b=>b.onclick=()=>startDatabaseQuiz(b.dataset.dbcat,Number(b.dataset.dblesson)));
   }else{
@@ -394,9 +402,9 @@ function showPanel(title,html){$('panelTitle').textContent=title;$('panelBody').
 
 function startQuiz(id){currentTopic=topics.find(t=>t.id===id);qIndex=0;score=0;wrongCount=0;quizAnswers=[];renderQuestion()}
 function renderQuestion(){selected=-1;answered=false;const q=currentTopic.qs[qIndex];showPanel(currentTopic.name,`<div style="font-weight:900;color:#7654c5">CÂU ${qIndex+1}/${currentTopic.qs.length} · Đúng ${score} · Sai ${wrongCount}</div><div class="quizq">${q[0]}</div><div class="choices">${q[1].map((a,i)=>`<button class="choice" data-answer="${i}">${'ABCD'[i]}. ${safe(a)}</button>`).join('')}</div><div id="feedback"></div><div class="row"><button class="primary" id="submit">XÁC NHẬN</button></div>`);document.querySelectorAll('[data-answer]').forEach(b=>b.onclick=()=>{if(answered)return;selected=+b.dataset.answer;document.querySelectorAll('[data-answer]').forEach(x=>x.classList.toggle('sel',x===b))});$('submit').onclick=checkAnswer}
-function checkAnswer(){if(answered)return;if(selected<0){toast('Em hãy chọn một đáp án nhé!');return}answered=true;const q=currentTopic.qs[qIndex],ok=selected===q[2];quizAnswers[qIndex]=selected;if(ok){score++;xp+=10;coins+=2;save();sendPosition(true)}else wrongCount++;document.querySelectorAll('[data-answer]').forEach((b,i)=>{if(i===q[2])b.classList.add('ok');if(i===selected&&!ok)b.classList.add('no')});let penalty='';if(!ok){penalty=wrongCount===1?'💪 Phạt đẩy tạ 10 lần!':wrongCount>1?'🏃 Phạt chạy 5 vòng bờ hồ!':''}const msg=ok?'🎉 Chính xác! +10 XP, +2 xu 🌸':'💦 Chưa đúng rồi! '+penalty;$('feedback').innerHTML=`<div class="feedback ${ok?'good':'bad'}"><b>${msg}</b><br>${safe(q[3])}</div>`;$('submit').textContent=qIndex===currentTopic.qs.length-1?'XEM KẾT QUẢ':'CÂU TIẾP THEO';$('submit').onclick=()=>{qIndex++;if(qIndex<currentTopic.qs.length)renderQuestion();else finishQuiz()};if(channel&&!ok)channel.send({type:'broadcast',event:'teacher-quiz',payload:{text:nickname+' vừa làm sai một câu. '+penalty}})}
+function checkAnswer(){if(answered)return;if(selected<0){toast('Em hãy chọn một đáp án nhé!');return}answered=true;const q=currentTopic.qs[qIndex],ok=selected===q[2];quizAnswers[qIndex]=selected;if(ok){score++;xp+=10;coins+=2;save();sendPosition(true)}else wrongCount++;document.querySelectorAll('[data-answer]').forEach((b,i)=>{if(i===q[2])b.classList.add('ok');if(i===selected&&!ok)b.classList.add('no')});let penalty='';if(!ok){penalty=wrongCount===1?'💪 Phạt đẩy tạ 10 lần!':wrongCount>1?'🏃 Phạt chạy 5 vòng bờ hồ!':''}const msg=ok?'🎉 Chính xác! +10 XP, +2 xu 🌸':'💦 Chưa đúng rồi! '+penalty;$('feedback').innerHTML=`<div class="feedback ${ok?'good':'bad'}"><b>${msg}</b><br>${safe(cleanExplanation(q[3]))}</div>`;$('submit').textContent=qIndex===currentTopic.qs.length-1?'XEM KẾT QUẢ':'CÂU TIẾP THEO';$('submit').onclick=()=>{qIndex++;if(qIndex<currentTopic.qs.length)renderQuestion();else finishQuiz()};if(channel&&!ok)channel.send({type:'broadcast',event:'teacher-quiz',payload:{text:nickname+' vừa làm sai một câu. '+penalty}})}
 async function finishQuiz(){const total=currentTopic.qs.length,rate=Math.round(score/total*100),bonus=score===total?30:rate>=60?15:5;xp+=bonus;coins+=Math.round(bonus/5);save();sendPosition(true);if(currentTopic.db)await saveAttempt();const penalty=wrongCount>1?'🏃 Phạt chạy 5 vòng bờ hồ!':wrongCount===1?'💪 Phạt đẩy tạ 10 lần!':'🌟 Không có hình phạt, tuyệt vời!';showPanel('🏆 Hoàn thành nhiệm vụ',`<div style="text-align:center"><div style="font-size:58px">${rate===100?'🏆':'🌸'}</div><h2>${score}/${total} câu đúng</h2><p>Tỷ lệ chính xác: ${rate}%</p><div class="feedback ${rate>=60?'good':'bad'}"><b>${penalty}</b><br>${rate===100?'すばらしい！ Xuất sắc!':rate>=60?'よくできました！ Làm tốt lắm!':'もう一度！ Hãy cố gắng thêm nhé!'}</div><h3>+${bonus} XP · +${Math.round(bonus/5)} xu</h3><div class="row"><button class="primary" id="again">LÀM LẠI</button><button class="subtle" id="back">ĐÓNG</button></div></div>`);$('again').onclick=()=>startQuiz(currentTopic.id);$('back').onclick=closePanel}
-$('lessonBtn').onclick=openLessons;$('practiceBtn').onclick=openLessons;$('quizBtn').onclick=()=>startQuiz('grammar');$('taskBtn').onclick=()=>user?openStudentAssignments():showPanel('🎯 Nhiệm vụ hôm nay','IKIGAI DAILY QUEST','<p>🌸 Hoàn thành 1 bài từ vựng N5<br>🗣️ Gửi 1 câu tiếng Nhật vào khung chat<br>📚 Ôn lại 5 từ mới trong ngày</p>');$('rankBtn').onclick=async()=>{try{const {data,error}=await client.rpc('get_ikigai_leaderboard');if(!error&&data?.length){const agg={};data.forEach(a=>{agg[a.user_id]=agg[a.user_id]||{name:a.nickname,xp:0,attempts:0,correct:0,days:a.study_days};agg[a.user_id].xp=Number(a.total_xp||0);agg[a.user_id].attempts=Number(a.attempts||0);agg[a.user_id].correct=Number(a.avg_score||0)});const rows=Object.values(agg).sort((a,b)=>b.xp-a.xp);showPanel('🏆 Bảng xếp hạng IKIGAI',`<p>Xếp hạng theo XP từ các lượt làm bài đã đồng bộ.</p><div class="ranklist">${rows.map((p,i)=>`<div class="rankitem"><span>${['🥇','🥈','🥉'][i]||('#'+(i+1))} ${safe(p.name)} <small>· ${p.attempts} lượt · ${p.days} ngày học</small></span><strong>${p.xp} XP</strong></div>`).join('')}</div>`);return}}catch(e){console.warn(e)}
+$('lessonBtn').onclick=openLessons;$('practiceBtn').onclick=openLessons;$('quizBtn').onclick=openJFT;$('taskBtn').onclick=()=>user?openStudentAssignments():showPanel('🎯 Nhiệm vụ hôm nay','IKIGAI DAILY QUEST','<p>🌸 Hoàn thành 1 bài từ vựng N5<br>🗣️ Gửi 1 câu tiếng Nhật vào khung chat<br>📚 Ôn lại 5 từ mới trong ngày</p>');$('rankBtn').onclick=async()=>{try{const {data,error}=await client.rpc('get_ikigai_leaderboard');if(!error&&data?.length){const agg={};data.forEach(a=>{agg[a.user_id]=agg[a.user_id]||{name:a.nickname,xp:0,attempts:0,correct:0,days:a.study_days};agg[a.user_id].xp=Number(a.total_xp||0);agg[a.user_id].attempts=Number(a.attempts||0);agg[a.user_id].correct=Number(a.avg_score||0)});const rows=Object.values(agg).sort((a,b)=>b.xp-a.xp);showPanel('🏆 Bảng xếp hạng IKIGAI',`<p>Xếp hạng theo XP từ các lượt làm bài đã đồng bộ.</p><div class="ranklist">${rows.map((p,i)=>`<div class="rankitem"><span>${['🥇','🥈','🥉'][i]||('#'+(i+1))} ${safe(p.name)} <small>· ${p.attempts} lượt · ${p.days} ngày học</small></span><strong>${p.xp} XP</strong></div>`).join('')}</div>`);return}}catch(e){console.warn(e)}
  const roster=Object.values(people).flat().map(p=>({name:p.name||'Học viên',xp:Number(p.xp||0),role:p.role||'student',id:p.user_id||p.id||''}));
  if(!roster.some(p=>p.id===user?.id))roster.push({name:nickname,xp,role:isTeacher?'teacher':'student',id:user?.id||'me'});
  roster.sort((a,b)=>b.xp-a.xp);
@@ -404,6 +412,96 @@ $('lessonBtn').onclick=openLessons;$('practiceBtn').onclick=openLessons;$('quizB
  showPanel('🏆 Bảng xếp hạng · N5-01',`<p>Thành viên đang trực tuyến trong phòng. Điểm XP được xếp theo phiên hiện tại.</p><div class="ranklist">${rows||'<p>Chưa có thành viên.</p>'}</div><div class="row"><button class="subtle" id="refreshRank">LÀM MỚI</button></div>`);
  $('refreshRank').onclick=()=>{$('rankBtn').click()};
  };
-$('teacherBtn').onclick=()=>{if(!isTeacher)return;showPanel('👑 Bảng điều khiển Giáo viên',`<p>リー先生 · IKIGAI</p><p><b>Quyền giáo viên đang bật.</b></p><div class="choices"><button class="choice" id="announce">📣 Thông báo cả lớp</button><button class="choice" id="assign">📝 Giao nhiệm vụ</button><button class="choice" id="praise">🌟 Khen thưởng</button><button class="choice" id="test">🧪 Mở bài kiểm tra</button><button class="choice" id="manageLMS">📚 Ngân hàng & Giao bài</button><button class="choice" id="studentTasks">📋 Bài tập đã giao</button></div><p style="font-size:12px;color:#74688b">Các lệnh được gửi qua kênh lớp học hiện tại.</p>`);$('announce').onclick=()=>{closePanel();sendChat('📣 Cả lớp chú ý nhé! リー先生 có thông báo.')};$('assign').onclick=()=>{closePanel();sendChat('📝 Nhiệm vụ: hoàn thành bài tập N5 và gửi câu trả lời vào nhóm.')};$('praise').onclick=()=>{closePanel();sendChat('🌟 すばらしい！ リー先生 khen cả lớp đã cố gắng!')};$('test').onclick=()=>{closePanel();sendChat('🧪 リー先生 bắt đầu bài kiểm tra ngữ pháp N5!');startQuiz('grammar')};$('manageLMS').onclick=openTeacherLMS;$('studentTasks').onclick=openStudentAssignments};
+$('teacherBtn').onclick=()=>{if(!isTeacher)return;showPanel('👑 Bảng điều khiển Giáo viên','リー先生 · IKIGAI',`<p><b>Quyền giáo viên đang bật.</b></p><div class="choices"><button class="choice" id="announce">📣 Thông báo cả lớp</button><button class="choice" id="assign">📝 Giao nhiệm vụ</button><button class="choice" id="praise">🌟 Khen thưởng</button><button class="choice" id="test">🧪 Mở bài kiểm tra</button><button class="choice" id="manageLMS">📚 Ngân hàng & Giao bài</button><button class="choice" id="studentTasks">📋 Bài tập đã giao</button></div><p style="font-size:12px;color:#74688b">Các lệnh được gửi qua kênh lớp học hiện tại.</p>`);$('announce').onclick=()=>{closePanel();sendChat('📣 Cả lớp chú ý nhé! リー先生 có thông báo.')};$('assign').onclick=()=>{closePanel();sendChat('📝 Nhiệm vụ: hoàn thành bài tập N5 và gửi câu trả lời vào nhóm.')};$('praise').onclick=()=>{closePanel();sendChat('🌟 すばらしい！ リー先生 khen cả lớp đã cố gắng!')};$('test').onclick=()=>{closePanel();sendChat('🧪 リー先生 bắt đầu bài kiểm tra ngữ pháp N5!');startQuiz('grammar')};$('manageLMS').onclick=openTeacherLMS;$('studentTasks').onclick=openStudentAssignments};
 window.addEventListener('beforeunload',()=>{if(channel)channel.untrack()});
+
+// ===== IKIGAI JFT-BASIC A2 MODULE v1.0 =====
+// PDF question pages are rendered with PDF.js. Answer keys are only evaluated after submission.
+let jftData=null, jftPdf=null, jftCurrent=null, jftAnswers={}, jftPageIndex=0, jftTimer=null, jftSeconds=0;
+const JFT_PDF_URL='assets/jft/jft-basic-a2-tests.pdf';
+const JFT_STORE='ikigai_jft_attempts_v1';
+function jftEsc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function jftLoadHistory(){try{return JSON.parse(localStorage.getItem(JFT_STORE)||'[]')}catch(e){return []}}
+function jftSaveHistory(item){const h=jftLoadHistory();h.unshift(item);localStorage.setItem(JFT_STORE,JSON.stringify(h.slice(0,100)))}
+async function openJFT(){
+ try{
+  if(!jftData){const r=await fetch('assets/jft/answer-key.json');if(!r.ok)throw new Error('Không tải được dữ liệu đề');jftData=await r.json()}
+  const hist=jftLoadHistory();
+  showPanel('🎓 IKIGAI · Thi thử JFT-Basic A2',`
+   <p>10 đề thi thử · 50 câu/đề · 60 phút/đề · gồm 4 phần theo tài liệu.</p>
+   <div class="jft-grid">${jftData.tests.map(t=>{const last=hist.find(x=>x.testId===t.id);return `<button class="choice jft-test" data-jft-test="${t.id}"><b>📝 ${t.name}</b><small>50 câu · 60 phút</small><small>${last?`Lần gần nhất: ${last.score}/50 (${last.percent}%)`:'Chưa làm bài'}</small></button>`}).join('')}</div>
+   <div class="jft-actions"><button class="choice" id="jftHistory">📊 Lịch sử kết quả</button><button class="choice" id="jftGuide">📖 Hướng dẫn thi</button></div>
+   <p class="jft-note">Lưu ý: phần nghe trong tài liệu hiện là kịch bản hội thoại dạng chữ, chưa có âm thanh. Hãy sử dụng theo đúng tài liệu được cung cấp.</p>
+  `);
+  document.querySelectorAll('[data-jft-test]').forEach(b=>b.onclick=()=>jftStart(Number(b.dataset.jftTest)));
+  $('jftHistory').onclick=jftShowHistory;
+  $('jftGuide').onclick=()=>showPanel('📖 Hướng dẫn thi JFT',`<ul><li>Mỗi đề gồm 50 câu, thời gian 60 phút.</li><li>Chọn A/B/C cho từng câu.</li><li>Có thể chuyển trang tài liệu và quay lại câu trả lời.</li><li>Nộp bài để xem điểm, đáp án và câu chưa làm.</li><li>Kết quả được lưu trên thiết bị đang sử dụng.</li></ul><button class="primary" onclick="openJFT()">Đã hiểu</button>`);
+ }catch(e){console.error(e);toast('Không mở được module JFT: '+e.message)}
+}
+async function jftStart(id){
+ const test=jftData.tests.find(x=>x.id===id);if(!test)return;
+ if(!window.pdfjsLib){toast('Không tải được trình đọc PDF. Kiểm tra kết nối mạng rồi thử lại.');return}
+ jftCurrent=test;jftAnswers={};jftPageIndex=0;jftSeconds=test.minutes*60;
+ showPanel(`🎓 ${test.name} · JFT-Basic A2`,`
+  <div class="jft-exam-head"><b id="jftClock">60:00</b><span id="jftProgress">0/50 câu đã chọn</span></div>
+  <div class="jft-toolbar"><button class="choice" id="jftPrevPage">◀ Trang trước</button><span id="jftPageLabel">Trang 1</span><button class="choice" id="jftNextPage">Trang sau ▶</button></div>
+  <div class="jft-pdf-wrap"><canvas id="jftCanvas"></canvas></div>
+  <div class="jft-answer-title">PHIẾU TRẢ LỜI · Chọn đáp án</div>
+  <div class="jft-answer-grid" id="jftAnswerGrid"></div>
+  <div class="jft-submit-row"><button class="choice" id="jftExit">Thoát đề</button><button class="primary" id="jftSubmit">NỘP BÀI & CHẤM ĐIỂM</button></div>
+  <p class="jft-note">Chọn đáp án cho 50 câu. Hệ thống không hiển thị đáp án đúng trước khi nộp.</p>
+ `);
+ document.querySelector('#jftExit').onclick=()=>{if(confirm('Thoát đề thi? Các câu trả lời chưa nộp sẽ bị mất.')){clearInterval(jftTimer);openJFT()}};
+ document.querySelector('#jftSubmit').onclick=()=>jftSubmit(false);
+ document.querySelector('#jftPrevPage').onclick=()=>jftRenderPage(-1);
+ document.querySelector('#jftNextPage').onclick=()=>jftRenderPage(1);
+ jftBuildAnswers(); 
+ try{if(!jftPdf){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';jftPdf=await pdfjsLib.getDocument(JFT_PDF_URL).promise}await jftRenderPage(0)}catch(e){console.error(e);toast('Không tải được PDF đề thi.')}
+ clearInterval(jftTimer);jftUpdateClock();jftTimer=setInterval(()=>{jftSeconds--;jftUpdateClock();if(jftSeconds<=0)jftSubmit(true)},1000);
+}
+function jftBuildAnswers(){
+ const el=$('jftAnswerGrid');el.innerHTML=Array.from({length:50},(_,i)=>`<div class="jft-answer-item" data-jft-item="${i+1}"><b>${i+1}.</b>${['A','B','C'].map(a=>`<button data-jft-q="${i+1}" data-jft-a="${a}">${a}</button>`).join('')}</div>`).join('');
+ el.querySelectorAll('[data-jft-q]').forEach(b=>b.onclick=()=>{jftAnswers[b.dataset.jftQ]=b.dataset.jftA;jftUpdateAnswers()});
+ jftUpdateAnswers();
+}
+function jftUpdateAnswers(){
+ document.querySelectorAll('[data-jft-item]').forEach(row=>{const q=row.dataset.jftItem;row.querySelectorAll('button').forEach(b=>b.classList.toggle('selected',jftAnswers[q]===b.dataset.jftA))});
+ const n=Object.keys(jftAnswers).length;$('jftProgress').textContent=`${n}/50 câu đã chọn`;
+}
+async function jftRenderPage(delta){
+ if(!jftPdf||!jftCurrent)return;
+ const total=jftCurrent.endPage-jftCurrent.startPage+1;
+ jftPageIndex=Math.max(0,Math.min(total-1,jftPageIndex+delta));
+ const page=await jftPdf.getPage(jftCurrent.startPage+jftPageIndex);
+ const canvas=$('jftCanvas'),ctx=canvas.getContext('2d');
+ const box=canvas.parentElement.clientWidth-16,base=page.getViewport({scale:1});
+ const scale=Math.min(1.65,box/base.width);
+ const viewport=page.getViewport({scale});
+ canvas.width=viewport.width*devicePixelRatio;canvas.height=viewport.height*devicePixelRatio;
+ canvas.style.width=viewport.width+'px';canvas.style.height=viewport.height+'px';
+ await page.render({canvasContext:ctx,viewport:page.getViewport({scale:scale*devicePixelRatio})}).promise;
+ $('jftPageLabel').textContent=`Trang ${jftPageIndex+1}/${total}`;
+ $('jftPrevPage').disabled=jftPageIndex===0;$('jftNextPage').disabled=jftPageIndex===total-1;
+}
+function jftUpdateClock(){const m=Math.floor(Math.max(0,jftSeconds)/60),s=Math.max(0,jftSeconds)%60;const el=$('jftClock');if(el){el.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');el.classList.toggle('urgent',jftSeconds<=300)}}
+function jftSubmit(auto){
+ if(!jftCurrent)return;clearInterval(jftTimer);
+ const answers=jftCurrent.answers;let score=0,details=[];
+ for(let i=1;i<=50;i++){const given=jftAnswers[i]||null,correct=answers[i-1];if(given===correct)score++;details.push({no:i,given,correct,ok:given===correct})}
+ const item={testId:jftCurrent.id,testName:jftCurrent.name,score,percent:Math.round(score/50*100),date:new Date().toISOString(),details};
+ jftSaveHistory(item);jftCurrent=null;
+ showPanel('📊 KẾT QUẢ THI JFT-BASIC A2',`
+  <div class="jft-score"><strong>${score}/50</strong><span>${Math.round(score/50*100)}% câu đúng</span><small>${auto?'Hết giờ – hệ thống tự động nộp bài.': 'Đã nộp bài thành công.'}</small></div>
+  <p><b>${details.filter(x=>!x.given).length}</b> câu chưa trả lời · <b>${50-score}</b> câu chưa đúng.</p>
+  <div class="jft-review" id="jftReview">${details.map(x=>`<div class="${x.ok?'correct':'wrong'}"><b>Câu ${x.no}</b><span>Chọn: ${x.given||'—'} · Đáp án: <strong>${x.correct}</strong></span></div>`).join('')}</div>
+  <div class="jft-submit-row"><button class="choice" id="jftBack">Danh sách đề</button><button class="primary" id="jftAgain">Làm lại đề này</button></div>
+ `);
+ $('jftBack').onclick=openJFT;$('jftAgain').onclick=()=>jftStart(item.testId);
+}
+function jftShowHistory(){
+ const h=jftLoadHistory();
+ showPanel('📊 Lịch sử thi JFT',h.length?`<div class="jft-history">${h.map(x=>`<div><b>${jftEsc(x.testName)}</b><span>${x.score}/50 · ${x.percent}%</span><small>${new Date(x.date).toLocaleString('vi-VN')}</small></div>`).join('')}</div><button class="choice" id="jftHistoryBack">Quay lại</button>`:'<p>Chưa có kết quả thi nào trên thiết bị này.</p><button class="choice" id="jftHistoryBack">Quay lại</button>');
+ $('jftHistoryBack').onclick=openJFT;
+}
+
 })();

@@ -5,11 +5,11 @@
 <title>IKIGAI WORLD — N5 Learning World v3.0</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<link rel="stylesheet" href="style.css?v=3.0"></head>
+<link rel="stylesheet" href="style.css?v=3.2"></head>
 <body><div id="app">
 <div class="scene"><div class="sun"></div><div class="windowwall"><div class="garden"></div></div><div class="curtain left"></div><div class="curtain right"></div><div class="floor"></div><div class="board">IKIGAI<br>日本語クラス N5</div><div class="sakura">🌸</div></div>
 <div class="topbar"><div class="brand"><div class="logo">∞</div><div><b>IKIGAI WORLD</b><small>ANIME EDITION · N5 QUEST</small></div></div><div class="roompill">🏠 LỚP HỌC N5-01 · <span id="onlineCount">1</span> người</div><div class="connection-pill" id="connectionStatus">● Chưa kết nối</div><div class="stats"><span>⭐ <em id="xp">0</em> XP</span><span>🪙 <em id="coins">0</em></span><span>🏅 Lv.<em id="level">1</em></span></div></div>
-<div class="side"><button id="lessonBtn">📚 Bài học</button><button id="practiceBtn">✏️ Luyện tập</button><button id="quizBtn">📝 Kiểm tra</button><button id="taskBtn">🎯 Nhiệm vụ</button><button id="rankBtn">🏆 BXH</button><button id="teacherBtn" class="hidden">👑 Giáo viên</button></div>
+<div class="side"><button id="lessonBtn">📚 Bài học</button><button id="practiceBtn">✏️ Luyện tập</button><button id="quizBtn">🎓 Thi JFT A2</button><button id="taskBtn">🎯 Nhiệm vụ</button><button id="rankBtn">🏆 BXH</button><button id="teacherBtn" class="hidden">👑 Giáo viên</button></div>
 <div class="main" id="characters" aria-label="Nhân vật trong lớp học"></div><div class="joystick" id="joystick" aria-label="Điều khiển di chuyển"><div class="joy-base"><div class="joy-stick" id="joyStick"></div></div></div>
 <div class="rightpanel"><div class="tabs"><button class="active" id="chatTab">💬 Trò chuyện</button><button id="memberTab">👥 Thành viên</button></div><div class="messages" id="messages"><div class="msg teacher"><b>リー先生</b><small>Hệ thống</small><br>みなさん、こんにちは！ Chào mừng các em đến IKIGAI WORLD 🌸</div></div><div class="teacher-tools" id="teacherTools"><button data-quick="Cả lớp chú ý nhé! 📣">📣 Thông báo</button><button data-quick="Các em hãy hoàn thành bài tập nhé! 📝">📝 Giao bài</button><button data-quick="すばらしい！ Các em làm rất tốt! 🌟">🌟 Khen lớp</button></div><div class="compose"><input id="chatInput" placeholder="Nhập tin nhắn..." maxlength="240"><button class="send" id="sendBtn">➤</button></div></div>
 <div class="bottom"><div class="glass hintbottom">💡 Di chuyển đến gần リー先生 để nhận nhiệm vụ</div><div class="emotes"><button data-emote="👏">👏</button><button data-emote="👍">👍</button><button data-emote="❤️">❤️</button><button data-emote="😮">😮</button><button data-emote="😂">😂</button></div><div class="glass voice" id="speakBtn">🎤 Nói</div></div>
@@ -24,4 +24,4 @@
 <button class="primary" id="studentEnter" style="width:100%">VÀO LỚP HỌC ▶</button>
 </div><button class="subtle" id="showTeacher" style="width:100%;margin-top:8px">👑 Đăng nhập Giáo viên</button><div class="teacher-login" id="teacherLogin"><input id="teacherEmail" type="email" placeholder="Email giáo viên"><input id="teacherPassword" type="password" placeholder="Mật khẩu"><button class="primary" id="teacherEnter" style="width:100%">ĐĂNG NHẬP GIÁO VIÊN</button><p style="font-size:11px">Tài khoản giáo viên phải được cấp quyền teacher trong Supabase.</p></div><p id="loginStatus" style="min-height:18px"></p></div></div>
 </div>
-<script src="app.js?v=3.0"></script></body></html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script><script src="app.js?v=3.2"></script></body></html>
