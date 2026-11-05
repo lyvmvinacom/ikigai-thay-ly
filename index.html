@@ -3,226 +3,58 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#0b1830">
-<title>IKIGAI — Thế giới tiếng Nhật cùng Thầy Ly</title>
-<style>
-:root{--navy:#0b1830;--navy2:#142746;--teal:#27c5b5;--mint:#a8f1df;--cream:#fff8e8;--gold:#ffd166;--ink:#17243a;--muted:#718096}
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#081426;font-family:ui-rounded,"Trebuchet MS",system-ui,sans-serif;color:#fff;touch-action:none}
-button{font:inherit;cursor:pointer;border:0}#app{height:100dvh;width:100vw;position:relative;overflow:hidden;background:linear-gradient(145deg,#0d203b,#081426)}
-#game{position:absolute;inset:0;width:100%;height:100%;display:block;image-rendering:pixelated}
-.topbar{position:absolute;z-index:5;top:env(safe-area-inset-top,8px);left:12px;right:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;pointer-events:none}
-.brand,.stats,.iconbtn{pointer-events:auto;background:#0b1830df;border:1px solid #ffffff20;box-shadow:0 5px 18px #0005;border-radius:14px;backdrop-filter:blur(8px)}
-.brand{padding:8px 12px;display:flex;gap:8px;align-items:center}.logo{width:30px;height:30px;border-radius:10px;background:linear-gradient(135deg,var(--teal),#6ee7d2);display:grid;place-items:center;color:#073044;font-weight:1000;font-size:18px}.brand b{font-size:13px;letter-spacing:1.3px}.brand small{display:block;color:#9db5c9;font-size:9px;letter-spacing:1px}
-.stats{display:flex;gap:12px;padding:9px 12px;font-size:12px;font-weight:800}.stats span{white-space:nowrap}.stats em{font-style:normal;color:var(--gold)}
-.iconbtn{color:white;padding:10px 12px;font-size:17px}
-.hint{position:absolute;z-index:3;top:76px;left:50%;transform:translateX(-50%);background:#0b1830d9;border:1px solid #ffffff22;border-radius:99px;padding:7px 13px;color:#dce9f3;font-size:11px;white-space:nowrap;box-shadow:0 4px 14px #0004}
-.bottom-ui{position:absolute;z-index:4;bottom:calc(env(safe-area-inset-bottom,8px) + 10px);left:14px;right:14px;display:flex;justify-content:space-between;align-items:end;pointer-events:none}
-.joystick{width:126px;height:126px;position:relative;border-radius:50%;background:#0b1830a8;border:2px solid #ffffff35;box-shadow:inset 0 0 0 8px #ffffff0b;pointer-events:auto;touch-action:none}
-.stick{position:absolute;width:48px;height:48px;border-radius:50%;left:37px;top:37px;background:linear-gradient(145deg,#b9fff0,#27c5b5);border:3px solid #eafffa;box-shadow:0 4px 12px #0006}
-.actions{display:flex;align-items:end;gap:10px;pointer-events:auto}
-.action{width:66px;height:66px;border-radius:22px;background:linear-gradient(145deg,#1b3a59,#10233c);border:2px solid #ffffff35;color:#fff;font-weight:900;box-shadow:0 5px 14px #0006;display:grid;place-items:center;font-size:11px}
-.action b{font-size:23px;line-height:1}.action.primary{background:linear-gradient(145deg,#36d5bf,#159b98);color:#062a38;border-color:#b7fff1}
-#keyboardHelp{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);color:#c1d2df;font-size:11px;background:#0b1830aa;padding:8px 13px;border-radius:99px;white-space:nowrap}
-.panel{position:absolute;z-index:10;left:50%;top:50%;transform:translate(-50%,-50%);width:min(570px,calc(100vw - 26px));max-height:min(84dvh,760px);overflow:auto;background:linear-gradient(160deg,#fffdf5,#f0f6f4);color:var(--ink);border:4px solid #1e465c;border-radius:22px;box-shadow:0 20px 70px #0009;padding:20px;display:none;touch-action:pan-y}
-.panel.show{display:block}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.panel h2{margin:0;color:#10334b;font-size:21px}.close{width:34px;height:34px;border-radius:11px;background:#e6efec;color:#16364c;font-weight:900;font-size:18px}
-.eyebrow{color:#168f8c;font-size:10px;font-weight:1000;letter-spacing:1.5px;text-transform:uppercase}.sub{color:#627386;font-size:13px;line-height:1.5}
-.topic-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:15px}.topic{background:white;border:2px solid #dbe8e5;border-radius:15px;padding:13px;text-align:left;color:#18364c;box-shadow:0 3px 0 #dbe8e5}.topic:active{transform:translateY(2px);box-shadow:none}.topic .emoji{font-size:25px}.topic b{display:block;margin:5px 0 2px}.topic small{color:#708292}
-.dialogue{display:flex;gap:12px;align-items:flex-start;background:#e6f7f2;border:1px solid #b7e8dc;border-radius:16px;padding:13px;margin:12px 0}.teacher{width:58px;height:58px;flex:none;border-radius:16px;background:#163c58;display:grid;place-items:center;font-size:35px;box-shadow:inset 0 -5px #0b273e}.dialogue p{margin:4px 0 0;font-size:14px;line-height:1.5}
-.question{font-size:22px;font-weight:900;text-align:center;padding:16px 8px;color:#102f49;line-height:1.5}.choices{display:grid;gap:9px}.choice{background:#fff;border:2px solid #d7e3e0;border-radius:13px;padding:12px;text-align:left;color:#18364c;font-weight:800}.choice.selected{border-color:#17aaa0;background:#e4f8f3}.choice.correct{border-color:#16a36b;background:#e3f8ed}.choice.wrong{border-color:#df6b63;background:#fff0ed}
-.primary-btn,.secondary-btn{padding:12px 17px;border-radius:13px;font-weight:900}.primary-btn{background:#159f98;color:white;box-shadow:0 4px 0 #0b7774}.secondary-btn{background:#e3eeeb;color:#24455a}.rowbtn{display:flex;gap:9px;justify-content:flex-end;margin-top:15px}
-.feedback{margin-top:12px;padding:12px;border-radius:12px;background:#e9f5f2;color:#1d4a4b;font-size:13px;line-height:1.5}
-.progress{height:9px;background:#dce9e6;border-radius:99px;overflow:hidden;margin:8px 0 15px}.progress i{display:block;height:100%;background:linear-gradient(90deg,#19a99e,#8ce3c9);width:0}
-.map-list{display:grid;gap:9px;margin-top:14px}.map-item{display:flex;align-items:center;gap:12px;padding:12px;background:white;border:1px solid #dce9e6;border-radius:14px;color:#17374d}.map-item .big{font-size:26px}.map-item small{display:block;color:#718292}.map-item button{margin-left:auto;background:#e3f5ef;color:#087c78;padding:8px 10px;border-radius:10px;font-weight:900}
-.toast{position:absolute;z-index:8;left:50%;top:19%;transform:translate(-50%,-10px);background:#102d47;color:white;border:1px solid #ffffff35;border-radius:14px;padding:10px 15px;opacity:0;transition:.2s;pointer-events:none;box-shadow:0 8px 25px #0006;font-size:13px}.toast.show{opacity:1;transform:translate(-50%,0)}
-.start{position:absolute;z-index:20;inset:0;background:radial-gradient(ellipse at 50% 38%,#1d4960,#0b1830 70%);display:flex;align-items:center;justify-content:center;padding:20px;text-align:center}.start-card{max-width:470px}.start-logo{width:82px;height:82px;margin:0 auto 14px;border-radius:26px;background:linear-gradient(135deg,#5be0ca,#159d9b);display:grid;place-items:center;color:#073044;font-size:47px;font-weight:1000;box-shadow:0 12px 30px #0005}.start h1{font-size:clamp(27px,7vw,42px);margin:0;letter-spacing:1px}.start h1 span{color:#4ee0c8}.start p{color:#bfd1dd;line-height:1.6;font-size:14px}.start input{width:min(280px,80vw);padding:13px 15px;border-radius:12px;border:2px solid #ffffff35;background:#ffffff12;color:white;text-align:center;font-size:16px;outline:none;margin:10px 0}.start input::placeholder{color:#9eb4c5}.start .primary-btn{display:block;margin:8px auto 0;min-width:190px;font-size:15px}
-@media(max-width:600px){.brand{padding:7px 9px}.brand b{font-size:11px}.stats{gap:8px;padding:8px;font-size:10px}.iconbtn{padding:8px 10px}.hint{top:68px;font-size:10px}.joystick{width:112px;height:112px}.stick{left:31px;top:31px;width:46px;height:46px}.action{width:58px;height:58px;border-radius:19px}.bottom-ui{left:12px;right:12px}.panel{padding:16px}.question{font-size:19px}}
-@media(min-width:850px){.bottom-ui{opacity:.88}.joystick{width:110px;height:110px}.stick{left:31px;top:31px}}
-</style>
+<meta name="theme-color" content="#101a38">
+<title>IKIGAI WORLD — Anime Edition</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div id="app">
-<canvas id="game"></canvas>
-<div class="topbar">
- <div class="brand"><div class="logo">∞</div><div><b>IKIGAI WORLD</b><small>JAPANESE QUEST</small></div></div>
- <div class="stats"><span>⭐ <em id="xp">0</em> XP</span><span>🏅 <em id="level">1</em></span><span>🪙 <em id="coins">0</em></span></div>
- <button class="iconbtn" id="mapBtn" aria-label="Bản đồ">🗺️</button>
+  <header class="topbar">
+    <div class="brand"><span class="brandmark">∞</span><span><b>IKIGAI WORLD</b><small>ANIME EDITION · N5 QUEST</small></span></div>
+    <div class="hud"><span>⭐ <b id="xp">0</b> XP</span><span>👥 <b id="online">1</b></span><button id="rankBtn">🏆 Xếp hạng</button></div>
+  </header>
+  <main id="world">
+    <canvas id="game"></canvas>
+    <div class="scene-label">🏫 LỚP HỌC IKIGAI · PHÒNG <b id="roomLabel">N5-01</b></div>
+    <div class="tip" id="tip">Di chuyển đến gần Thầy Ly để nhận nhiệm vụ</div>
+    <div class="bottom-controls">
+      <div class="joystick" id="joystick"><div class="knob" id="knob"></div></div>
+      <div class="actions"><button id="run">⚡<small>CHẠY</small></button><button id="interact" class="primary">✦<small>TƯƠNG TÁC</small></button></div>
+    </div>
+  </main>
 </div>
-<div class="hint" id="hint">Di chuyển đến gần Thầy Ly để bắt đầu nhiệm vụ</div>
-<div class="toast" id="toast"></div>
-<div class="bottom-ui" id="controls">
- <div class="joystick" id="joy"><div class="stick" id="stick"></div></div>
- <div class="actions">
-  <button class="action" id="runBtn"><b>⚡</b>CHẠY</button>
-  <button class="action primary" id="interactBtn"><b>✦</b>TƯƠNG TÁC</button>
+
+<section class="modal visible" id="welcome">
+ <div class="modal-card welcome-card">
+  <div class="logo-large">∞</div><p class="eyebrow">IKIGAI LANGUAGE CENTER</p>
+  <h1>IKIGAI <em>WORLD</em></h1><p class="muted">Bước vào thế giới tiếng Nhật cùng Thầy Ly.</p>
+  <input id="nickname" maxlength="18" placeholder="Tên nhân vật của bạn">
+  <input id="roomCode" maxlength="16" value="N5-01" placeholder="Mã phòng">
+  <button class="primary-btn" id="enter">VÀO LỚP HỌC →</button>
+  <p class="tiny">Bản khởi tạo · Chơi trên máy tính và điện thoại</p>
  </div>
-</div>
-<div id="keyboardHelp">WASD / phím mũi tên: di chuyển · Space / Enter: tương tác · M: bản đồ</div>
-<div class="start" id="start">
- <div class="start-card">
-  <div class="start-logo">∞</div>
-  <div class="eyebrow">IKIGAI LANGUAGE CENTER PRESENTS</div>
-  <h1>IKIGAI <span>WORLD</span></h1>
-  <p>Thế giới học tiếng Nhật 2D cùng Thầy Ly.<br>Khám phá lớp học, nhận nhiệm vụ và chinh phục JLPT N5!</p>
-  <input id="playerName" maxlength="18" placeholder="Tên nhân vật của bạn" value="">
-  <button class="primary-btn" id="startBtn">BẮT ĐẦU KHÁM PHÁ ▶</button>
-  <p style="font-size:11px;margin-top:16px">Có thể chơi trên máy tính và điện thoại · Tiến độ lưu trên thiết bị</p>
+</section>
+
+<section class="modal" id="dialog">
+ <div class="modal-card">
+  <button class="close" data-close>×</button><p class="eyebrow">NPC · GIÁO VIÊN IKIGAI</p>
+  <h2>👨🏻‍🏫 Thầy Ly</h2>
+  <p class="muted">こんにちは！ Hôm nay chúng ta cùng chinh phục N5 nhé.</p>
+  <div class="topic-grid">
+   <button data-topic="Từ vựng N5">📘<b>Từ vựng N5</b></button>
+   <button data-topic="Kanji N5">🈶<b>Kanji N5</b></button>
+   <button data-topic="Ngữ pháp N5">✏️<b>Ngữ pháp N5</b></button>
+   <button data-topic="Hội thoại N5">💬<b>Hội thoại N5</b></button>
+  </div>
+  <p id="quizPrompt" class="quiz-prompt"></p><div id="answers"></div><p id="feedback"></p>
  </div>
-</div>
-<div class="panel" id="panel">
- <div class="panel-head"><div><div class="eyebrow" id="panelEyebrow">IKIGAI QUEST</div><h2 id="panelTitle">Nhiệm vụ</h2></div><button class="close" id="closePanel">×</button></div>
- <div id="panelBody"></div>
-</div>
-</div>
-<script>
-(()=>{
-const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
-const $=id=>document.getElementById(id);
-let W=960,H=640,dpr=1,scale=1,player={x:480,y:450,dir:0},keys={},joy={x:0,y:0},running=false,gameStarted=false,activePanel=false;
-let xp=Number(localStorage.ikigaiXP||0),coins=Number(localStorage.ikigaiCoins||0),level=Math.floor(xp/100)+1,playerName=localStorage.ikigaiName||'Học viên';
-let area='class',lastTime=0,moveSpeed=170,nearNpc=false;
-const tile=40,world={w:24,h:16};
-const obstacles=[];
-function resize(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=W*dpr;canvas.height=H*dpr;canvas.style.width=W+'px';canvas.style.height=H+'px';ctx.setTransform(dpr,0,0,dpr,0,0);scale=Math.min(W/960,H/640);if(W<600)scale=Math.max(scale,.72)}
-window.addEventListener('resize',resize);resize();
-const colors={grass:'#79b98b',grass2:'#6eaa80',path:'#d9c69a',wall:'#37566b',wood:'#9b694b',dark:'#24445a',teal:'#24b8a9',cream:'#f7e9c9'};
-function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h)}
-function text(t,x,y,size=14,c='#fff',align='left'){ctx.fillStyle=c;ctx.font=`bold ${size}px system-ui`;ctx.textAlign=align;ctx.fillText(t,x,y)}
-function rounded(x,y,w,h,r,c){ctx.fillStyle=c;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
-function drawDesk(x,y){rect(x-22,y-10,44,27,'#875b42');rect(x-19,y-7,38,20,'#bd8b61');rect(x-17,y+17,5,12,'#684633');rect(x+12,y+17,5,12,'#684633');rect(x-10,y-4,19,4,'#f0d7a5')}
-function drawPerson(x,y,shirt,skin='#f1c49b',hair='#273044',isTeacher=false){ctx.save();ctx.translate(x,y);
- // shadow
- ctx.fillStyle='#233b3b55';ctx.beginPath();ctx.ellipse(0,12,13,5,0,0,Math.PI*2);ctx.fill();
- // legs
- rect(-8,3,6,12,'#34445a');rect(3,3,6,12,'#34445a');rect(-10,13,9,4,'#27394b');rect(2,13,9,4,'#27394b');
- // body
- rounded(-12,-13,24,23,6,shirt);rect(-9,-10,18,4,'#ffffff55');
- // head
- rounded(-10,-31,20,20,6,skin);rect(-10,-32,20,7,hair);rect(-10,-26,4,4,hair);rect(6,-26,4,4,hair);
- rect(-5,-22,2,2,'#243044');rect(4,-22,2,2,'#243044');rect(-2,-16,5,2,'#a64f4b');
- if(isTeacher){rect(-13,-36,26,5,'#17344b');rect(-8,-42,16,7,'#e6f4f0');rect(-2,-41,4,5,'#27b9ac');}
- ctx.restore()}
-function drawTree(x,y){rect(x-4,y,8,20,'#79553d');ctx.fillStyle='#2c795e';ctx.beginPath();ctx.arc(x,y-7,19,0,Math.PI*2);ctx.fill();ctx.fillStyle='#45956b';ctx.beginPath();ctx.arc(x-9,y-14,10,0,Math.PI*2);ctx.fill();ctx.fillStyle='#70b87e';ctx.beginPath();ctx.arc(x+7,y-18,9,0,Math.PI*2);ctx.fill()}
-function drawWorld(){
- const vw=W/scale,vh=H/scale;const camX=Math.max(0,Math.min(world.w*tile-vw,player.x-vw/2)),camY=Math.max(0,Math.min(world.h*tile-vh,player.y-vh/2));
- ctx.save();ctx.scale(scale,scale);ctx.translate(-camX,-camY);
- // floor
- for(let y=0;y<world.h;y++)for(let x=0;x<world.w;x++){rect(x*tile,y*tile,tile,tile,(x+y)%2?colors.grass:colors.grass2);if((x*7+y*11)%13===0){rect(x*tile+9,y*tile+8,3,3,'#a4cf91');}}
- // building room
- rect(120,70,720,470,'#c7a47c');rect(130,80,700,450,'#f1dfbd');
- // walls and windows
- rect(120,70,720,22,'#31566b');rect(120,70,22,470,'#31566b');rect(818,70,22,470,'#31566b');rect(120,518,720,22,'#31566b');
- for(let x=185;x<800;x+=150){rect(x,74,65,14,'#8dd6d0');rect(x+29,74,5,14,'#fff4d6')}
- // board
- rect(365,102,230,70,'#5b4639');rect(373,110,214,54,'#1e5960');text('いらっしゃい！',480,132,18,'#effff1','center');text('IKIGAI 日本語教室',480,153,13,'#a8eee0','center');
- // teacher desk
- drawDesk(480,214);drawPerson(480,205,'#1d7180','#f0c39b','#28364b',true);text('THẦY LY',480,179,12,'#17364b','center');
- // student desks
- [[270,275],[385,275],[575,275],[690,275],[270,380],[385,380],[575,380],[690,380]].forEach(([x,y])=>{drawDesk(x,y);drawPerson(x,y+34,'#4779a4');});
- // shelves and decorations
- rect(155,110,105,24,'#875d42');for(let i=0;i<5;i++){rect(162+i*19,114,13,16,['#d4a65d','#6da4b3','#d97c68','#8bbd8c','#b18ac4'][i])}
- rect(700,110,100,24,'#875d42');for(let i=0;i<4;i++)rect(708+i*22,114,14,16,'#e2b866');
- // doors
- rect(445,518,70,22,'#704a37');rect(454,487,52,53,'#b17b53');rect(478,510,5,5,'#f4d58b');
- // outside path and trees
- rect(0,545,960,95,'#d8c394');rect(0,565,960,35,'#e9d7b0');
- [[55,90],[70,460],[890,100],[890,480],[55,560],[900,570],[320,590],[650,590]].forEach(([x,y])=>drawTree(x,y));
- // zone markers
- rounded(155,445,115,34,10,'#16465ddf');text('📚 THƯ VIỆN',212,467,12,'#fff','center');
- rounded(690,445,110,34,10,'#16465ddf');text('💬 HỘI THOẠI',745,467,12,'#fff','center');
- rounded(420,575,120,34,10,'#16465ddf');text('🏆 PHÒNG THI',480,597,12,'#fff','center');
- // Player
- drawPerson(player.x,player.y,'#21b7a9','#f2c59e','#26334a');text(playerName,player.x,player.y-43,11,'#12334a','center');
- // prompt
- const dist=Math.hypot(player.x-480,player.y-205);nearNpc=dist<90;
- if(nearNpc){rounded(420,232,120,26,9,'#0c3049');text('✦ TƯƠNG TÁC',480,250,11,'#fff','center')}
- ctx.restore();
-}
-function update(dt){if(!gameStarted||activePanel)return;let dx=joy.x,dy=joy.y;
- if(keys.ArrowLeft||keys.a||keys.A)dx-=1;if(keys.ArrowRight||keys.d||keys.D)dx+=1;if(keys.ArrowUp||keys.w||keys.W)dy-=1;if(keys.ArrowDown||keys.s||keys.S)dy+=1;
- let len=Math.hypot(dx,dy);if(len>1){dx/=len;dy/=len}let speed=running?moveSpeed*1.45:moveSpeed;
- let nx=player.x+dx*speed*dt,ny=player.y+dy*speed*dt;
- // room bounds and soft collision with desks
- nx=Math.max(155,Math.min(805,nx));ny=Math.max(205,Math.min(495,ny));
- const desks=[[270,275],[385,275],[575,275],[690,275],[270,380],[385,380],[575,380],[690,380]];
- for(const [x,y] of desks){if(Math.abs(nx-x)<31&&Math.abs(ny-y)<26){nx=player.x;ny=player.y;break}}
- if(Math.hypot(dx,dy)>.1)player.dir=Math.atan2(dy,dx);
- player.x=nx;player.y=ny;
- if(nearNpc)$('hint').textContent='Bạn đang ở gần Thầy Ly — nhấn TƯƠNG TÁC';else $('hint').textContent='Khám phá lớp học · Di chuyển đến gần Thầy Ly';
-}
-function loop(t){let dt=Math.min((t-lastTime)/1000||0,.04);lastTime=t;update(dt);ctx.clearRect(0,0,W,H);drawWorld();requestAnimationFrame(loop)}requestAnimationFrame(loop);
-function toast(s){$('toast').textContent=s;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),1900)}
-function save(){localStorage.ikigaiXP=xp;localStorage.ikigaiCoins=coins;localStorage.ikigaiName=playerName;level=Math.floor(xp/100)+1;$('xp').textContent=xp;$('coins').textContent=coins;$('level').textContent=level}
-function showPanel(title,eyebrow,html){activePanel=true;$('panelTitle').textContent=title;$('panelEyebrow').textContent=eyebrow;$('panelBody').innerHTML=html;$('panel').classList.add('show')}
-function closePanel(){activePanel=false;$('panel').classList.remove('show')}
-$('closePanel').onclick=closePanel;
-const topics=[
- {id:'vocab',name:'Từ vựng N5',icon:'📘',desc:'Từ vựng thiết yếu',questions:[
- ['「りんご」は何ですか。',['Quả táo','Quả cam','Quả chuối','Quả nho'],0,'りんご nghĩa là quả táo.'],
- ['「学校」の読み方は？',['がっこう','がこう','がっこ','かっこう'],0,'学校（がっこう）nghĩa là trường học.'],
- ['「きのう」はいつですか。',['Hôm qua','Hôm nay','Ngày mai','Tuần sau'],0,'きのう nghĩa là hôm qua.'],
- ['「先生」は何ですか。',['Giáo viên','Học sinh','Bác sĩ','Nhân viên'],0,'先生（せんせい）là giáo viên/thầy cô.'],
- ['「あたらしい」の意味は？',['Mới','Cũ','Đắt','Rẻ'],0,'あたらしい nghĩa là mới.']]},
- {id:'kanji',name:'Kanji N5',icon:'🈶',desc:'Nhận diện chữ Hán',questions:[
- ['「山」の読み方は？',['やま','かわ','そら','うみ'],0,'山（やま）nghĩa là núi.'],
- ['「水」は何ですか。',['Nước','Lửa','Đất','Gió'],0,'水（みず）nghĩa là nước.'],
- ['「木」の意味は？',['Cây','Kim loại','Đá','Hoa'],0,'木（き）nghĩa là cây/gỗ.'],
- ['「火曜日」は何曜日ですか。',['Thứ ba','Thứ hai','Thứ tư','Thứ năm'],0,'火曜日（かようび）là thứ ba.'],
- ['「人」の読み方は？',['ひと','いぬ','ねこ','とり'],0,'人（ひと）nghĩa là người.']]},
- {id:'grammar',name:'Ngữ pháp N5',icon:'✏️',desc:'Mẫu câu Minna no Nihongo',questions:[
- ['わたしは 学生（　）です。',['は','を','に','で'],0,'Trong câu giới thiệu chủ đề, dùng は.'],
- ['毎日 7時（　）起きます。',['に','を','で','へ'],0,'に chỉ thời điểm cụ thể.'],
- ['これは だれ（　）かばんですか。',['の','を','に','で'],0,'の biểu thị sở hữu: của ai.'],
- ['学校（　）行きます。',['へ','を','が','で'],0,'へ chỉ phương hướng/đích đến.'],
- ['コーヒー（　）飲みます。',['を','に','へ','の'],0,'を đánh dấu tân ngữ trực tiếp.']]},
- {id:'reading',name:'Đọc hiểu N5',icon:'📖',desc:'Đọc đoạn ngắn và trả lời',questions:[
- ['田中さんは毎朝6時に起きます。何時に起きますか。',['6時','7時','8時','9時'],0,'Đoạn văn nói Tanaka thức dậy lúc 6 giờ.'],
- ['日曜日、わたしは友だちと映画を見ました。だれと映画を見ましたか。',['友だち','先生','家族','一人で'],0,'友だちと = cùng với bạn.'],
- ['これはわたしの本です。だれの本ですか。',['わたし','田中さん','先生','母'],0,'わたしの本 = sách của tôi.'],
- ['きょうは雨です。天気はどうですか。',['雨','晴れ','雪','くもり'],0,'雨（あめ）là mưa.']]},
- {id:'kaiwa',name:'Hội thoại N5',icon:'💬',desc:'Phản xạ trong tình huống',questions:[
- ['A: おはようございます。 B: ＿＿＿',['おはようございます','こんばんは','さようなら','おやすみなさい'],0,'Buổi sáng đáp lại bằng おはようございます.'],
- ['A: ありがとうございます。 B: ＿＿＿',['どういたしまして','すみません','いただきます','いってきます'],0,'Đáp lại lời cảm ơn: どういたしまして.'],
- ['A: お名前は？ B: ＿＿＿',['リンです','学生ですか','日本です','はい、そうです'],0,'リンです = Tôi tên là Linh.'],
- ['A: これはいくらですか。 B: ＿＿＿',['500円です','学校です','本です','元気です'],0,'Hỏi giá tiền, trả lời số tiền.']]},
- {id:'mix',name:'Thử thách tổng hợp',icon:'🏆',desc:'Kiểm tra kiến thức N5',questions:[]}
-];
-topics.find(t=>t.id==='mix').questions=[...topics[0].questions.slice(0,2),...topics[2].questions.slice(0,2),...topics[4].questions.slice(0,1),...topics[3].questions.slice(0,1)];
-let current=null,qIndex=0,score=0,selected=-1,answered=false;
-function teacherIntro(){showPanel('Gặp Thầy Ly','NPC · GIÁO VIÊN IKIGAI',`<div class="dialogue"><div class="teacher">👨🏻‍🏫</div><div><b>Thầy Ly</b><p>こんにちは、${playerName}! Chào mừng em đến với lớp học IKIGAI. Hôm nay chúng ta cùng chinh phục N5 nhé! Em muốn nhận nhiệm vụ nào?</p></div></div><div class="topic-grid">${topics.map(t=>`<button class="topic" data-topic="${t.id}"><span class="emoji">${t.icon}</span><b>${t.name}</b><small>${t.desc}</small></button>`).join('')}</div><p class="sub" style="margin-top:13px">Mỗi câu đúng nhận 10 XP và 2 xu. Hoàn thành nhiệm vụ sẽ nhận thêm thưởng.</p>`);
- document.querySelectorAll('[data-topic]').forEach(b=>b.onclick=()=>startQuiz(b.dataset.topic));
-}
-function startQuiz(id){current=topics.find(t=>t.id===id);qIndex=0;score=0;selected=-1;answered=false;renderQuestion()}
-function renderQuestion(){
- const q=current.questions[qIndex],pct=Math.round(qIndex/current.questions.length*100);
- showPanel(current.name,`NHIỆM VỤ · CÂU ${qIndex+1}/${current.questions.length}`,`<div class="row" style="justify-content:space-between;color:#607487;font-size:12px;font-weight:900"><span>${current.icon} ${current.name}</span><span>${score*10} XP dự kiến</span></div><div class="progress"><i style="width:${pct}%"></i></div><div class="dialogue"><div class="teacher">👨🏻‍🏫</div><div><b>Thầy Ly hỏi:</b><p>Em hãy suy nghĩ kỹ và chọn đáp án chính xác nhé!</p></div></div><div class="question">${q[0]}</div><div class="choices">${q[1].map((a,i)=>`<button class="choice" data-choice="${i}">${'ABCD'[i]}. ${a}</button>`).join('')}</div><div id="feedback"></div><div class="rowbtn"><button class="primary-btn" id="submitAnswer">XÁC NHẬN</button></div>`);
- document.querySelectorAll('[data-choice]').forEach(b=>b.onclick=()=>{if(answered)return;selected=Number(b.dataset.choice);document.querySelectorAll('.choice').forEach(x=>x.classList.toggle('selected',x===b))});
- $('submitAnswer').onclick=checkAnswer;
-}
-function checkAnswer(){if(answered)return;if(selected<0){toast('Em hãy chọn một đáp án nhé!');return}answered=true;const q=current.questions[qIndex],ok=selected===q[2];if(ok){score++;xp+=10;coins+=2;save()}document.querySelectorAll('.choice').forEach((b,i)=>{if(i===q[2])b.classList.add('correct');if(i===selected&&!ok)b.classList.add('wrong')});
- $('feedback').innerHTML=`<div class="feedback"><b>${ok?'🎉 Chính xác! +10 XP, +2 xu':'💡 Chưa đúng, mình cùng ghi nhớ nhé!'}</b><br>${q[3]}</div>`;
- $('submitAnswer').textContent=qIndex===current.questions.length-1?'XEM KẾT QUẢ':'CÂU TIẾP THEO';
- $('submitAnswer').onclick=()=>{qIndex++;if(qIndex<current.questions.length){selected=-1;answered=false;renderQuestion()}else finishQuiz()};
-}
-function finishQuiz(){const total=current.questions.length,rate=Math.round(score/total*100);let bonus=score===total?30:rate>=60?15:5;xp+=bonus;coins+=Math.round(bonus/5);save();showPanel('Hoàn thành nhiệm vụ!','QUEST COMPLETE',`<div style="text-align:center;padding:12px"><div style="font-size:56px">${rate===100?'🏆':rate>=60?'🥇':'🌱'}</div><h2 style="font-size:27px;margin:8px 0">${score}/${total} câu đúng</h2><p class="sub">Tỷ lệ chính xác: ${rate}%</p><div class="progress"><i style="width:${rate}%"></i></div><div class="dialogue" style="text-align:left"><div class="teacher">👨🏻‍🏫</div><div><b>Thầy Ly nhận xét</b><p>${rate===100?'Xuất sắc! Em đã hoàn thành nhiệm vụ hoàn hảo.':rate>=60?'Làm tốt lắm! Hãy ôn lại những câu sai để tiến bộ hơn.':'Không sao, quan trọng là mình học được điều mới. Em hãy thử lại nhé!'}</p></div></div><h3 style="color:#138c82">+${bonus} XP thưởng · +${Math.round(bonus/5)} xu</h3><div class="rowbtn"><button class="secondary-btn" id="backTeacher">VỀ GẶP THẦY</button><button class="primary-btn" id="retry">LÀM LẠI</button></div></div>`);$('backTeacher').onclick=teacherIntro;$('retry').onclick=()=>startQuiz(current.id)}
-function showMap(){showPanel('Bản đồ IKIGAI','KHÁM PHÁ THẾ GIỚI',`<p class="sub">Chọn khu vực để di chuyển và khám phá. Trong bản thử nghiệm, các khu vực học tập được mở qua nhiệm vụ của Thầy Ly.</p><div class="map-list"><div class="map-item"><span class="big">🏫</span><div><b>Lớp học chính</b><small>Gặp Thầy Ly · Nhiệm vụ N5</small></div><button data-goto="class">Đến đây</button></div><div class="map-item"><span class="big">📚</span><div><b>Thư viện</b><small>Từ vựng · Kanji · Đọc hiểu</small></div><button data-goto="library">Khám phá</button></div><div class="map-item"><span class="big">💬</span><div><b>Khu hội thoại</b><small>Phản xạ giao tiếp N5</small></div><button data-goto="kaiwa">Khám phá</button></div><div class="map-item"><span class="big">🏆</span><div><b>Phòng thử thách</b><small>Kiểm tra tổng hợp có tính giờ (sắp ra mắt)</small><button disabled style="opacity:.5">Sắp mở</button></div></div></div>`);
- document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{closePanel();player.x=480;player.y=430;if(b.dataset.goto==='library'){startQuiz('vocab')}else if(b.dataset.goto==='kaiwa'){startQuiz('kaiwa')}else teacherIntro()});
-}
-$('mapBtn').onclick=showMap;
-function interact(){if(!gameStarted||activePanel)return;if(nearNpc)teacherIntro();else toast('Hãy đến gần Thầy Ly để tương tác!')}
-$('interactBtn').onclick=interact;
-$('startBtn').onclick=()=>{playerName=$('playerName').value.trim()||'Học viên';gameStarted=true;$('start').style.display='none';save();toast('Chào mừng '+playerName+' đến IKIGAI WORLD!');};
-$('playerName').value=localStorage.ikigaiName||'';
-$('runBtn').onpointerdown=()=>running=true;$('runBtn').onpointerup=$('runBtn').onpointerleave=()=>running=false;
-window.addEventListener('keydown',e=>{keys[e.key]=true;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();if(e.key===' '||e.key==='Enter')interact();if(e.key.toLowerCase()==='m')showMap()});
-window.addEventListener('keyup',e=>keys[e.key]=false);
-const joyEl=$('joy'),stick=$('stick');let joyPointer=null;
-function joyMove(e){const r=joyEl.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=e.clientX-cx,dy=e.clientY-cy,max=r.width*.31,len=Math.hypot(dx,dy);if(len>max){dx=dx/len*max;dy=dy/len*max}joy.x=dx/max;joy.y=dy/max;stick.style.transform=`translate(${dx}px,${dy}px)`}
-joyEl.addEventListener('pointerdown',e=>{joyPointer=e.pointerId;joyEl.setPointerCapture(joyPointer);joyMove(e)});
-joyEl.addEventListener('pointermove',e=>{if(e.pointerId===joyPointer)joyMove(e)});
-function joyEnd(){joyPointer=null;joy.x=joy.y=0;stick.style.transform='translate(0,0)'}
-joyEl.addEventListener('pointerup',joyEnd);joyEl.addEventListener('pointercancel',joyEnd);
-save();
-})();
-</script>
-</body>
-</html>
+</section>
+
+<section class="modal" id="ranking">
+ <div class="modal-card"><button class="close" data-close>×</button><p class="eyebrow">IKIGAI LEADERBOARD</p><h2>🏆 Bảng xếp hạng</h2>
+ <p class="muted">Bảng điểm chung sẽ hoạt động sau khi cấu hình Supabase.</p><ol id="rankList"><li>Chưa kết nối máy chủ.</li></ol></div>
+</section>
+<div id="toast"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+</body></html>
