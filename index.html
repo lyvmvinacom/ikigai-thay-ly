@@ -70,6 +70,28 @@
  .avatar-option{width:65px;height:82px}.avatar-option svg{height:68px}
 }
 
+
+/* v2.1: translucent glass chat panel so the classroom remains visible */
+.rightpanel{
+ background:rgba(255,250,244,.48)!important;
+ backdrop-filter:blur(7px) saturate(125%);
+ -webkit-backdrop-filter:blur(7px) saturate(125%);
+ border:2px solid rgba(255,255,255,.78)!important;
+ box-shadow:0 10px 32px rgba(58,35,91,.16)!important;
+}
+.rightpanel .tabs{background:rgba(232,222,255,.55)!important}
+.rightpanel .tabs button{background:rgba(255,255,255,.34)}
+.rightpanel .tabs button.active{background:rgba(105,68,198,.88)!important}
+.rightpanel .messages{background:rgba(255,255,255,.12)}
+.rightpanel .msg{background:rgba(241,239,255,.66)!important;border:1px solid rgba(255,255,255,.72)}
+.rightpanel .msg.teacher{background:rgba(225,248,241,.70)!important}
+.rightpanel .compose{background:rgba(255,255,255,.32);border-top:1px solid rgba(255,255,255,.55)}
+.rightpanel .compose input{background:rgba(255,255,255,.78)}
+@media(max-width:760px){
+ .rightpanel{background:rgba(255,250,244,.50)!important}
+ .rightpanel .messages{background:rgba(255,255,255,.10)}
+}
+
 </style></head>
 <body><div id="app">
 <div class="scene"><div class="sun"></div><div class="windowwall"><div class="garden"></div></div><div class="curtain left"></div><div class="curtain right"></div><div class="floor"></div><div class="board">IKIGAI<br>日本語クラス N5</div><div class="sakura">🌸</div></div>
@@ -140,10 +162,22 @@ function renderPeople(){
  [...chars.querySelectorAll('.character')].forEach(el=>{if(!activeIds.has(el.dataset.userId))el.remove()});
  const unique=list.filter((p,i,a)=>a.findIndex(q=>(q.user_id||q.id)===(p.user_id||p.id))===i);$('onlineCount').textContent=unique.length||1;
 }
+let trackInFlight=false,trackQueued=false,lastTrackedX=null,lastTrackedY=null;
 async function publishPosition(force=false){
  if(!channel||!joined||!user)return;
- const now=Date.now();if(!force&&now-lastTrack<120)return;lastTrack=now;
- try{await channel.track({user_id:user.id,name:nickname,role:isTeacher?'teacher':'student',gender:studentGender,avatar:studentAvatar,xp,x:myPos.x,y:myPos.y,moving:!!(keysDown.ArrowUp||keysDown.ArrowDown||keysDown.ArrowLeft||keysDown.ArrowRight||keysDown.w||keysDown.a||keysDown.s||keysDown.d),online_at:new Date().toISOString()})}catch(e){console.warn('Presence track:',e)}
+ const now=Date.now();
+ // Presence is rate-limited: at most one track every 250ms (4/sec).
+ // Never overlap track() requests; keep only the latest position while one is pending.
+ if(trackInFlight){trackQueued=true;return}
+ if(now-lastTrack<250){trackQueued=true;return}
+ const moved=Math.abs(myPos.x-(lastTrackedX??-999))>0.15||Math.abs(myPos.y-(lastTrackedY??-999))>0.15;
+ if(!force&&!moved&&!trackQueued)return;
+ lastTrack=now;trackInFlight=true;trackQueued=false;
+ try{
+  await channel.track({user_id:user.id,name:nickname,role:isTeacher?'teacher':'student',gender:studentGender,avatar:studentAvatar,x:myPos.x,y:myPos.y,xp,moving:!!(keysDown.ArrowUp||keysDown.ArrowDown||keysDown.ArrowLeft||keysDown.ArrowRight||keysDown.w||keysDown.a||keysDown.s||keysDown.d),online_at:new Date().toISOString()});
+  lastTrackedX=myPos.x;lastTrackedY=myPos.y;
+ }catch(e){console.warn('Presence track:',e);trackQueued=true}
+ finally{trackInFlight=false}
 }
 function setPosition(dx,dy){
  if(!joined)return;
@@ -160,7 +194,7 @@ function movementLoop(){
   if(keysDown.ArrowUp||keysDown.w||keysDown.W)dy--;
   if(keysDown.ArrowDown||keysDown.s||keysDown.S)dy++;dx+=Number(keysDown.joyX||0);dy+=Number(keysDown.joyY||0);
   if(dx||dy){const len=Math.hypot(dx,dy);setPosition(dx/len,dy/len)}
- },55);
+ },50);
 }
 function setupMovement(){
  movementLoop();
