@@ -415,83 +415,98 @@ $('lessonBtn').onclick=openLessons;$('practiceBtn').onclick=openLessons;$('quizB
 $('teacherBtn').onclick=()=>{if(!isTeacher)return;showPanel('👑 Bảng điều khiển Giáo viên','リー先生 · IKIGAI',`<p><b>Quyền giáo viên đang bật.</b></p><div class="choices"><button class="choice" id="announce">📣 Thông báo cả lớp</button><button class="choice" id="assign">📝 Giao nhiệm vụ</button><button class="choice" id="praise">🌟 Khen thưởng</button><button class="choice" id="test">🧪 Mở bài kiểm tra</button><button class="choice" id="manageLMS">📚 Ngân hàng & Giao bài</button><button class="choice" id="studentTasks">📋 Bài tập đã giao</button></div><p style="font-size:12px;color:#74688b">Các lệnh được gửi qua kênh lớp học hiện tại.</p>`);$('announce').onclick=()=>{closePanel();sendChat('📣 Cả lớp chú ý nhé! リー先生 có thông báo.')};$('assign').onclick=()=>{closePanel();sendChat('📝 Nhiệm vụ: hoàn thành bài tập N5 và gửi câu trả lời vào nhóm.')};$('praise').onclick=()=>{closePanel();sendChat('🌟 すばらしい！ リー先生 khen cả lớp đã cố gắng!')};$('test').onclick=()=>{closePanel();sendChat('🧪 リー先生 bắt đầu bài kiểm tra ngữ pháp N5!');startQuiz('grammar')};$('manageLMS').onclick=openTeacherLMS;$('studentTasks').onclick=openStudentAssignments};
 window.addEventListener('beforeunload',()=>{if(channel)channel.untrack()});
 
-// ===== IKIGAI JFT-BASIC A2 MODULE v1.0 =====
-// PDF question pages are rendered with PDF.js. Answer keys are only evaluated after submission.
-let jftData=null, jftPdf=null, jftCurrent=null, jftAnswers={}, jftPageIndex=0, jftTimer=null, jftSeconds=0;
-const JFT_PDF_URL='assets/jft/jft-basic-a2-tests.pdf';
+// ===== IKIGAI JFT-BASIC A2 MODULE v2.0 · ONE QUESTION PER SCREEN =====
+// Each question is rendered from an individual high-resolution crop of the source test.
+let jftData=null,jftPdf=null,jftRenderTask=null,jftRenderToken=0,jftCurrent=null,jftAnswers={},jftQuestionNo=1,jftTimer=null,jftSeconds=0;
+const JFT_RAW_BASE='https://raw.githubusercontent.com/lyvmvinacom/ikigai-thay-ly/main/assets/jft/';
 const JFT_STORE='ikigai_jft_attempts_v1';
 function jftEsc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function jftLoadHistory(){try{return JSON.parse(localStorage.getItem(JFT_STORE)||'[]')}catch(e){return []}}
 function jftSaveHistory(item){const h=jftLoadHistory();h.unshift(item);localStorage.setItem(JFT_STORE,JSON.stringify(h.slice(0,100)))}
+function jftPanelMode(on){const p=$('panel');if(p)p.classList.toggle('jft-exam-panel',!!on)}
+async function jftLoadData(){
+ if(!jftData){const r=await fetch(JFT_RAW_BASE+'answer-key.json?v=4');if(!r.ok)throw new Error('Không tải được dữ liệu đáp án');jftData=await r.json()}
+}
 async function openJFT(){
  try{
-  if(!jftData){const r=await fetch('https://raw.githubusercontent.com/lyvmvinacom/ikigai-thay-ly/main/assets/jft/answer-key.json');if(!r.ok)throw new Error('Không tải được dữ liệu đề');jftData=await r.json()}
+  clearInterval(jftTimer);jftPanelMode(false);await jftLoadData();
   const hist=jftLoadHistory();
   showPanel('🎓 IKIGAI · Thi thử JFT-Basic A2',`
-   <p>10 đề thi thử · 50 câu/đề · 60 phút/đề · gồm 4 phần theo tài liệu.</p>
-   <div class="jft-grid">${jftData.tests.map(t=>{const last=hist.find(x=>x.testId===t.id);return `<button class="choice jft-test" data-jft-test="${t.id}"><b>📝 ${t.name}</b><small>50 câu · 60 phút</small><small>${last?`Lần gần nhất: ${last.score}/50 (${last.percent}%)`:'Chưa làm bài'}</small></button>`}).join('')}</div>
+   <div class="jft-home-intro"><b>10 đề thi thử · 500 câu hỏi</b><span>Giao diện từng câu · 60 phút/đề · Chấm điểm sau khi nộp</span></div>
+   <div class="jft-grid">${jftData.tests.map(t=>{const last=hist.find(x=>x.testId===t.id);return `<button class="choice jft-test" data-jft-test="${t.id}"><b>📝 ${jftEsc(t.name)}</b><small>50 câu · 60 phút</small><small>${last?`Lần gần nhất: ${last.score}/50 (${last.percent}%)`:'Chưa làm bài'}</small></button>`}).join('')}</div>
    <div class="jft-actions"><button class="choice" id="jftHistory">📊 Lịch sử kết quả</button><button class="choice" id="jftGuide">📖 Hướng dẫn thi</button></div>
-   <p class="jft-note">Lưu ý: phần nghe trong tài liệu hiện là kịch bản hội thoại dạng chữ, chưa có âm thanh. Hãy sử dụng theo đúng tài liệu được cung cấp.</p>
+   <p class="jft-note">Mỗi câu được tách riêng từ trang đề gốc, giữ nguyên hình minh họa, nội dung tiếng Nhật và các phương án A/B/C. Phần nghe trong tài liệu là kịch bản hội thoại dạng chữ, chưa có âm thanh.</p>
   `);
   document.querySelectorAll('[data-jft-test]').forEach(b=>b.onclick=()=>jftStart(Number(b.dataset.jftTest)));
   $('jftHistory').onclick=jftShowHistory;
-  $('jftGuide').onclick=()=>showPanel('📖 Hướng dẫn thi JFT',`<ul><li>Mỗi đề gồm 50 câu, thời gian 60 phút.</li><li>Chọn A/B/C cho từng câu.</li><li>Có thể chuyển trang tài liệu và quay lại câu trả lời.</li><li>Nộp bài để xem điểm, đáp án và câu chưa làm.</li><li>Kết quả được lưu trên thiết bị đang sử dụng.</li></ul><button class="primary" onclick="openJFT()">Đã hiểu</button>`);
+  $('jftGuide').onclick=jftShowGuide;
  }catch(e){console.error(e);toast('Không mở được module JFT: '+e.message)}
 }
+function jftShowGuide(){
+ showPanel('📖 Hướng dẫn thi JFT A2',`<ul class="jft-guide"><li>Mỗi đề có 50 câu, thời gian làm bài 60 phút.</li><li>Mỗi màn hình hiển thị một câu hỏi riêng, kèm hình ảnh và nội dung gốc.</li><li>Chọn A, B hoặc C ở khu vực trả lời bên dưới câu hỏi.</li><li>Dùng danh sách số câu để chuyển nhanh đến câu bất kỳ.</li><li>Màu tím là câu đang xem; màu xám là câu đã trả lời; màu trắng là câu chưa làm.</li><li>Đáp án đúng chỉ được hiển thị sau khi nộp bài.</li><li>Kết quả được lưu trên thiết bị đang sử dụng.</li></ul><button class="primary" id="jftGuideBack">Đã hiểu</button>`);
+ $('jftGuideBack').onclick=openJFT;
+}
 async function jftStart(id){
- const test=jftData.tests.find(x=>x.id===id);if(!test)return;
- if(!window.pdfjsLib){toast('Không tải được trình đọc PDF. Kiểm tra kết nối mạng rồi thử lại.');return}
- jftCurrent=test;jftAnswers={};jftPageIndex=0;jftSeconds=test.minutes*60;
+ const test=jftData?.tests.find(x=>x.id===id);
+ if(!test||!Array.isArray(test.answers)||test.answers.length!==50){toast('Dữ liệu đáp án của đề này chưa đầy đủ.');return}
+ if(!window.pdfjsLib){toast('Không tải được trình đọc đề. Hãy kiểm tra kết nối mạng.');return}
+ try{if(!jftPdf){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';jftPdf=await pdfjsLib.getDocument('assets/jft/jft-questions-one-by-one.pdf').promise}}catch(e){console.error(e);toast('Không tải được bộ câu hỏi JFT.');return}
+ jftCurrent=test;jftAnswers={};jftQuestionNo=1;jftSeconds=(Number(test.minutes)||60)*60;
  showPanel(`🎓 ${test.name} · JFT-Basic A2`,`
-  <div class="jft-exam-head"><b id="jftClock">60:00</b><span id="jftProgress">0/50 câu đã chọn</span></div>
-  <div class="jft-toolbar"><button class="choice" id="jftPrevPage">◀ Trang trước</button><span id="jftPageLabel">Trang 1</span><button class="choice" id="jftNextPage">Trang sau ▶</button></div>
-  <div class="jft-pdf-wrap"><canvas id="jftCanvas"></canvas></div>
-  <div class="jft-answer-title">PHIẾU TRẢ LỜI · Chọn đáp án</div>
-  <div class="jft-answer-grid" id="jftAnswerGrid"></div>
-  <div class="jft-submit-row"><button class="choice" id="jftExit">Thoát đề</button><button class="primary" id="jftSubmit">NỘP BÀI & CHẤM ĐIỂM</button></div>
-  <p class="jft-note">Chọn đáp án cho 50 câu. Hệ thống không hiển thị đáp án đúng trước khi nộp.</p>
+  <div class="jft-exam-head"><div class="jft-clock-wrap"><small>THỜI GIAN CÒN LẠI</small><b id="jftClock">60:00</b></div><div class="jft-progress-wrap"><small>TIẾN ĐỘ LÀM BÀI</small><b id="jftProgress">0/50 câu đã trả lời</b></div><div class="jft-test-label">${jftEsc(test.name)}<small>JFT-Basic A2</small></div></div>
+  <div class="jft-exam-layout">
+   <section class="jft-question-area">
+    <div class="jft-question-meta"><b id="jftQuestionLabel">CÂU 01 / 50</b><span>Chọn một đáp án đúng</span></div>
+    <div class="jft-question-visual" id="jftQuestionVisual"><canvas id="jftQuestionCanvas" aria-label="Nội dung câu hỏi JFT"></canvas></div>
+    <div class="jft-answer-title">PHIẾU TRẢ LỜI</div>
+    <div class="jft-choice-row" id="jftChoiceRow">${['A','B','C'].map(a=>`<button type="button" class="jft-choice" data-jft-choice="${a}"><span>${a}</span><b>Chọn đáp án ${a}</b></button>`).join('')}</div>
+    <div class="jft-bottom-nav"><button class="choice" id="jftPrev">◀ Câu trước</button><button class="primary" id="jftNext">Câu tiếp theo ▶</button></div>
+   </section>
+   <aside class="jft-question-sidebar"><div class="jft-nav-title"><b>Danh sách câu hỏi</b><small>Chọn số câu để chuyển nhanh</small></div><div class="jft-question-nav" id="jftQuestionNav"></div><div class="jft-legend"><span><i class="current"></i>Đang xem</span><span><i class="answered"></i>Đã trả lời</span><span><i></i>Chưa làm</span></div><button class="jft-finish" id="jftSubmit">NỘP BÀI THI</button><button class="jft-exit" id="jftExit">Thoát đề thi</button></aside>
+  </div>
+  <p class="jft-note">Không hiển thị đáp án đúng trong khi làm bài. Hãy kiểm tra danh sách câu hỏi trước khi nộp.</p>
  `);
- document.querySelector('#jftExit').onclick=()=>{if(confirm('Thoát đề thi? Các câu trả lời chưa nộp sẽ bị mất.')){clearInterval(jftTimer);openJFT()}};
- document.querySelector('#jftSubmit').onclick=()=>jftSubmit(false);
- document.querySelector('#jftPrevPage').onclick=()=>jftRenderPage(-1);
- document.querySelector('#jftNextPage').onclick=()=>jftRenderPage(1);
- jftBuildAnswers(); 
- try{if(!jftPdf){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';jftPdf=await pdfjsLib.getDocument(JFT_PDF_URL).promise}await jftRenderPage(0)}catch(e){console.error(e);toast('Không tải được PDF đề thi.')}
- clearInterval(jftTimer);jftUpdateClock();jftTimer=setInterval(()=>{jftSeconds--;jftUpdateClock();if(jftSeconds<=0)jftSubmit(true)},1000);
+ jftPanelMode(true);
+ $('jftQuestionNav').innerHTML=Array.from({length:50},(_,i)=>`<button type="button" data-jft-jump="${i+1}">${i+1}</button>`).join('');
+ document.querySelectorAll('[data-jft-jump]').forEach(b=>b.onclick=()=>jftGoTo(Number(b.dataset.jftJump)));
+ document.querySelectorAll('[data-jft-choice]').forEach(b=>b.onclick=()=>{jftAnswers[jftQuestionNo]=b.dataset.jftChoice;jftUpdateQuestionUI()});
+ $('jftPrev').onclick=()=>jftGoTo(jftQuestionNo-1);
+ $('jftNext').onclick=()=>jftGoTo(jftQuestionNo+1);
+ $('jftSubmit').onclick=()=>{const unanswered=50-Object.keys(jftAnswers).length;if(unanswered&& !confirm(`Còn ${unanswered} câu chưa trả lời. Bạn vẫn muốn nộp bài?`))return;jftSubmitExam(false)};
+ $('jftExit').onclick=()=>{if(confirm('Thoát đề thi? Kết quả chưa nộp sẽ không được lưu.')){clearInterval(jftTimer);jftCurrent=null;jftPanelMode(false);openJFT()}};
+ jftUpdateQuestionUI();clearInterval(jftTimer);jftUpdateClock();jftTimer=setInterval(()=>{jftSeconds--;jftUpdateClock();if(jftSeconds<=0)jftSubmitExam(true)},1000);
 }
-function jftBuildAnswers(){
- const el=$('jftAnswerGrid');el.innerHTML=Array.from({length:50},(_,i)=>`<div class="jft-answer-item" data-jft-item="${i+1}"><b>${i+1}.</b>${['A','B','C'].map(a=>`<button data-jft-q="${i+1}" data-jft-a="${a}">${a}</button>`).join('')}</div>`).join('');
- el.querySelectorAll('[data-jft-q]').forEach(b=>b.onclick=()=>{jftAnswers[b.dataset.jftQ]=b.dataset.jftA;jftUpdateAnswers()});
- jftUpdateAnswers();
+function jftGoTo(n){if(n<1||n>50)return;jftQuestionNo=n;jftUpdateQuestionUI()}
+function jftUpdateQuestionUI(){
+ if(!jftCurrent)return;
+ $('jftQuestionLabel').textContent=`CÂU ${String(jftQuestionNo).padStart(2,'0')} / 50`;
+ jftRenderQuestion();
+ document.querySelectorAll('[data-jft-choice]').forEach(b=>b.classList.toggle('selected',jftAnswers[jftQuestionNo]===b.dataset.jftChoice));
+ document.querySelectorAll('[data-jft-jump]').forEach(b=>{const n=Number(b.dataset.jftJump);b.classList.toggle('current',n===jftQuestionNo);b.classList.toggle('answered',!!jftAnswers[n])});
+ $('jftProgress').textContent=`${Object.keys(jftAnswers).length}/50 câu đã trả lời`;
+ $('jftPrev').disabled=jftQuestionNo===1;$('jftNext').disabled=jftQuestionNo===50;
 }
-function jftUpdateAnswers(){
- document.querySelectorAll('[data-jft-item]').forEach(row=>{const q=row.dataset.jftItem;row.querySelectorAll('button').forEach(b=>b.classList.toggle('selected',jftAnswers[q]===b.dataset.jftA))});
- const n=Object.keys(jftAnswers).length;$('jftProgress').textContent=`${n}/50 câu đã chọn`;
-}
-async function jftRenderPage(delta){
+async function jftRenderQuestion(){
  if(!jftPdf||!jftCurrent)return;
- const total=jftCurrent.endPage-jftCurrent.startPage+1;
- jftPageIndex=Math.max(0,Math.min(total-1,jftPageIndex+delta));
- const page=await jftPdf.getPage(jftCurrent.startPage+jftPageIndex);
- const canvas=$('jftCanvas'),ctx=canvas.getContext('2d');
- const box=canvas.parentElement.clientWidth-16,base=page.getViewport({scale:1});
- const scale=Math.min(1.65,box/base.width);
- const viewport=page.getViewport({scale});
- canvas.width=viewport.width*devicePixelRatio;canvas.height=viewport.height*devicePixelRatio;
- canvas.style.width=viewport.width+'px';canvas.style.height=viewport.height+'px';
- await page.render({canvasContext:ctx,viewport:page.getViewport({scale:scale*devicePixelRatio})}).promise;
- $('jftPageLabel').textContent=`Trang ${jftPageIndex+1}/${total}`;
- $('jftPrevPage').disabled=jftPageIndex===0;$('jftNextPage').disabled=jftPageIndex===total-1;
+ const token=++jftRenderToken,pageNo=(Number(jftCurrent.id)-1)*50+jftQuestionNo;
+ try{
+  if(jftRenderTask){try{jftRenderTask.cancel()}catch(e){}jftRenderTask=null}
+  const page=await jftPdf.getPage(pageNo);if(token!==jftRenderToken)return;
+  const wrap=$('jftQuestionVisual'),canvas=$('jftQuestionCanvas');if(!wrap||!canvas)return;
+  const base=page.getViewport({scale:1}),maxWidth=Math.max(280,wrap.clientWidth-20),cssScale=Math.min(1.8,maxWidth/base.width),dpr=Math.min(window.devicePixelRatio||1,2);
+  const viewport=page.getViewport({scale:cssScale*dpr});canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);canvas.style.width=Math.floor(base.width*cssScale)+'px';canvas.style.height=Math.floor(base.height*cssScale)+'px';
+  const ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,canvas.height);
+  const task=page.render({canvasContext:ctx,viewport});jftRenderTask=task;await task.promise;if(token!==jftRenderToken)return;jftRenderTask=null;
+ }catch(e){if(e?.name!=='RenderingCancelledException'){console.error(e);toast('Không hiển thị được câu hỏi '+pageNo)}}
 }
-function jftUpdateClock(){const m=Math.floor(Math.max(0,jftSeconds)/60),s=Math.max(0,jftSeconds)%60;const el=$('jftClock');if(el){el.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');el.classList.toggle('urgent',jftSeconds<=300)}}
-function jftSubmit(auto){
+function jftUpdateClock(){const m=Math.floor(Math.max(0,jftSeconds)/60),s=Math.max(0,jftSeconds)%60,el=$('jftClock');if(el){el.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');el.classList.toggle('urgent',jftSeconds<=300)}}
+function jftSubmitExam(auto){
  if(!jftCurrent)return;clearInterval(jftTimer);
  const answers=jftCurrent.answers;let score=0,details=[];
  for(let i=1;i<=50;i++){const given=jftAnswers[i]||null,correct=answers[i-1];if(given===correct)score++;details.push({no:i,given,correct,ok:given===correct})}
- const item={testId:jftCurrent.id,testName:jftCurrent.name,score,percent:Math.round(score/50*100),date:new Date().toISOString(),details};
- jftSaveHistory(item);jftCurrent=null;
+ const item={testId:jftCurrent.id,testName:jftCurrent.name,score,percent:Math.round(score/50*100),date:new Date().toISOString(),details};jftSaveHistory(item);jftCurrent=null;jftPanelMode(false);
  showPanel('📊 KẾT QUẢ THI JFT-BASIC A2',`
-  <div class="jft-score"><strong>${score}/50</strong><span>${Math.round(score/50*100)}% câu đúng</span><small>${auto?'Hết giờ – hệ thống tự động nộp bài.': 'Đã nộp bài thành công.'}</small></div>
+  <div class="jft-score"><strong>${score}/50</strong><span>${Math.round(score/50*100)}% câu đúng</span><small>${auto?'Hết giờ – hệ thống tự động nộp bài.':'Đã nộp bài thành công.'}</small></div>
   <p><b>${details.filter(x=>!x.given).length}</b> câu chưa trả lời · <b>${50-score}</b> câu chưa đúng.</p>
   <div class="jft-review" id="jftReview">${details.map(x=>`<div class="${x.ok?'correct':'wrong'}"><b>Câu ${x.no}</b><span>Chọn: ${x.given||'—'} · Đáp án: <strong>${x.correct}</strong></span></div>`).join('')}</div>
   <div class="jft-submit-row"><button class="choice" id="jftBack">Danh sách đề</button><button class="primary" id="jftAgain">Làm lại đề này</button></div>
@@ -499,9 +514,10 @@ function jftSubmit(auto){
  $('jftBack').onclick=openJFT;$('jftAgain').onclick=()=>jftStart(item.testId);
 }
 function jftShowHistory(){
- const h=jftLoadHistory();
+ const h=jftLoadHistory();jftPanelMode(false);
  showPanel('📊 Lịch sử thi JFT',h.length?`<div class="jft-history">${h.map(x=>`<div><b>${jftEsc(x.testName)}</b><span>${x.score}/50 · ${x.percent}%</span><small>${new Date(x.date).toLocaleString('vi-VN')}</small></div>`).join('')}</div><button class="choice" id="jftHistoryBack">Quay lại</button>`:'<p>Chưa có kết quả thi nào trên thiết bị này.</p><button class="choice" id="jftHistoryBack">Quay lại</button>');
  $('jftHistoryBack').onclick=openJFT;
 }
+
 
 })();
