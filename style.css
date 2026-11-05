@@ -134,3 +134,17 @@
  .avatar-option img.anime-sprite{max-height:72px}
 }
 
+
+
+/* v3.0 IKIGAI LMS */
+.lms-form{display:grid;gap:7px;max-height:62vh;overflow:auto;padding:4px}
+.lms-form label{font-size:12px;font-weight:900;color:#6245a8;margin-top:3px}
+.lms-form input,.lms-form select,.lms-form textarea{width:100%;padding:10px;border:1px solid #d9c9f3;border-radius:10px;background:#fff;color:#292044}
+.lms-form button{margin-top:5px}
+.lms-list{display:grid;gap:8px;max-height:58vh;overflow:auto}
+.lms-row{display:flex;align-items:center;gap:8px;justify-content:space-between;background:#f7f2ff;border:1px solid #e2d7f5;padding:10px;border-radius:12px;font-size:12px}
+.lms-row>div{min-width:0;flex:1;overflow-wrap:anywhere}
+.lms-row small{color:#776b91}
+.lms-row button{padding:7px 9px;border-radius:9px;background:#fff;color:#6547b5;border:1px solid #d8c8f1;font-weight:900;font-size:11px}
+.lms-row strong{white-space:nowrap;color:#6547b5}
+@media(max-width:760px){.lms-form{max-height:55vh}.lms-row{font-size:11px;flex-wrap:wrap}}
