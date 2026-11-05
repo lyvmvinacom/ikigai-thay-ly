@@ -92,6 +92,17 @@
  .rightpanel .messages{background:rgba(255,255,255,.10)}
 }
 
+
+/* v2.3 anime classroom visual polish */
+.scene:after{content:"🌸　🌸　🌸";position:absolute;top:1%;left:1%;font-size:clamp(25px,4vw,54px);letter-spacing:12px;opacity:.9;filter:drop-shadow(0 3px 2px #b45b8c55);pointer-events:none}
+.windowwall{background:linear-gradient(180deg,#83cef3 0%,#c9eff8 52%,#d9f4e5 76%,#91ce8b 100%)}
+.windowwall:after{content:"";position:absolute;left:35%;bottom:0;width:0;height:0;border-left:clamp(55px,8vw,115px) solid transparent;border-right:clamp(55px,8vw,115px) solid transparent;border-bottom:clamp(90px,15vh,180px) solid #f8fbff;filter:drop-shadow(0 5px 0 #8ebbd0);opacity:.92}
+.board{left:12%;top:20%;width:27%;height:28%;border:12px solid #a66b48;border-radius:8px;background:linear-gradient(135deg,#155b4e,#267768);box-shadow:0 10px 0 #704632,inset 0 0 0 5px #d8a16c;font-size:clamp(21px,3vw,43px);line-height:1.45;text-shadow:0 2px 2px #163b36}
+.board:after{content:"🌸　🗻　🏯";display:block;font-size:clamp(20px,2.4vw,34px);margin-top:7px}
+.scene:before{content:"📚　📚　📚";position:absolute;left:10%;top:49%;width:30%;height:12%;padding:18px 10px;background:linear-gradient(#9b6040 0 13%,#d9a36c 13% 18%,#9b6040 18% 100%);border:7px solid #a66b48;border-radius:7px;box-shadow:0 7px 0 #744a37;color:#f8e4b5;font-size:clamp(24px,3vw,42px);text-align:center;z-index:1;pointer-events:none}
+.garden:after{content:"🌸　🌿　🌺　🌱　🌸";position:absolute;right:3%;top:4%;font-size:clamp(18px,2.5vw,32px);white-space:nowrap}
+@media(max-width:700px){.board{left:12%;top:18%;width:52%;height:22%;font-size:clamp(18px,5vw,28px)}.scene:before{left:10%;top:43%;width:48%;height:10%;font-size:20px}.windowwall:after{left:42%;border-left:50px solid transparent;border-right:50px solid transparent;border-bottom:90px solid #f8fbff}}
+
 </style></head>
 <body><div id="app">
 <div class="scene"><div class="sun"></div><div class="windowwall"><div class="garden"></div></div><div class="curtain left"></div><div class="curtain right"></div><div class="floor"></div><div class="board">IKIGAI<br>日本語クラス N5</div><div class="sakura">🌸</div></div>
@@ -121,7 +132,20 @@ let myPos={x:48,y:70},keysDown={},moveTimer=null,lastTrack=0,avatarMap={},studen
 const localKey='ikigai_anime_v1';try{const s=JSON.parse(localStorage.getItem(localKey)||'{}');xp=s.xp||0;coins=s.coins||0}catch(e){}
 function save(){try{localStorage.setItem(localKey,JSON.stringify({xp,coins}))}catch(e){}$('xp').textContent=xp;$('coins').textContent=coins;$('level').textContent=Math.floor(xp/100)+1}
 save();function toast(t){$('toast').textContent=t;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2600)}
-function bubble(text,who='teacher',id=null){let el=id?document.querySelector(`[data-user-id=\"${CSS.escape(String(id))}\"] .speech`):null;if(!el&&who==='teacher')el=document.querySelector('[data-user-id=\"teacher-npc\"] .speech');if(!el)return;el.textContent=String(text);el.classList.add('show');setTimeout(()=>el.classList.remove('show'),5000)}
+const bubbleTimers=new Map();
+function bubble(text,who='teacher',id=null,attempt=0){
+ const targetId=id?String(id):(who==='teacher'?'teacher-npc':null);
+ let el=targetId?document.querySelector('[data-user-id="'+CSS.escape(targetId)+'"] .speech'):null;
+ if(!el&&who==='teacher')el=document.querySelector('[data-user-id="teacher-npc"] .speech');
+ if(!el){
+  if(id){pendingBubbles[String(id)]=String(text);if(attempt<12)setTimeout(()=>bubble(text,who,id,attempt+1),180)}
+  return;
+ }
+ if(targetId&&bubbleTimers.has(targetId))clearTimeout(bubbleTimers.get(targetId));
+ el.textContent=String(text);el.classList.add('show');
+ const timer=setTimeout(()=>{el.classList.remove('show');if(targetId)bubbleTimers.delete(targetId)},5200);
+ if(targetId)bubbleTimers.set(targetId,timer);
+}
 function addMessage(name,text,teacher=false,time=new Date()){const d=document.createElement('div');d.className='msg'+(teacher?' teacher':'');const tm=time.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});d.innerHTML='<b>'+safe(name)+'</b><small>'+tm+'</small><br>'+safe(text);$('messages').appendChild(d);$('messages').scrollTop=$('messages').scrollHeight;}
 function setupClient(){if(!window.supabase){$('loginStatus').textContent='Không tải được thư viện kết nối. Kiểm tra Internet.';return false}client=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);return true}
 async function enterStudent(){nickname=$('studentName').value.trim();studentGender=selectedGender;studentAvatar=selectedAvatar;if(!nickname){$('loginStatus').textContent='Em hãy nhập tên trước nhé!';return}if(!setupClient())return;$('studentEnter').disabled=true;$('loginStatus').textContent='Đang kết nối lớp học...';try{let {data:{session}}=await client.auth.getSession();if(!session){const r=await client.auth.signInAnonymously();if(r.error)throw r.error;session=r.data.session}user=session.user;isTeacher=false;await enterRoom()}catch(e){$('loginStatus').textContent='Lỗi kết nối: '+e.message;$('studentEnter').disabled=false}}
@@ -275,7 +299,11 @@ async function enterRoom(isReconnect=false){
   ch.on('broadcast',{event:'room-position-request'},({payload})=>{
    if(payload?.requester_id&&payload.requester_id!==user.id)sendPosition(true);
   });
-  ch.on('broadcast',{event:'room-chat'},({payload})=>{if(!payload)return;addMessage(payload.name||'Học viên',payload.text||'',!!payload.teacher);if(payload.user_id&&document.querySelector(`[data-user-id="${CSS.escape(String(payload.user_id))}"]`))bubble(payload.text,payload.teacher?'teacher':'student',payload.user_id);else if(payload.user_id)pendingBubbles[payload.user_id]=payload.text;});
+  ch.on('broadcast',{event:'room-chat'},({payload})=>{
+   if(!payload||payload.user_id===user?.id)return;
+   addMessage(payload.name||'Học viên',payload.text||'',!!payload.teacher);
+   if(payload.user_id)bubble(payload.text,payload.teacher?'teacher':'student',payload.user_id);
+  });
   ch.on('broadcast',{event:'room-emote'},({payload})=>{if(payload){const txt=(payload.name||'Bạn')+' '+payload.emote;if(payload.user_id&&document.querySelector(`[data-user-id="${CSS.escape(String(payload.user_id))}"]`))bubble(txt,'student',payload.user_id);else if(payload.user_id)pendingBubbles[payload.user_id]=txt;}});
   ch.on('broadcast',{event:'teacher-quiz'},({payload})=>{if(payload?.text)bubble(payload.text,'teacher')});
   ch.subscribe(async status=>{
@@ -312,7 +340,17 @@ document.addEventListener('visibilitychange',()=>{
 window.addEventListener('online',()=>{
  if(user&&client&&!joined){if(reconnectTimer){clearTimeout(reconnectTimer);reconnectTimer=null}scheduleRoomReconnect('network-online')}
 });
-async function sendChat(text){text=text.trim();if(!text||!channel||!joined)return;if(isTeacher===false&&text.length>240)return;const payload={user_id:user?.id,name:nickname,text,teacher:isTeacher,at:new Date().toISOString()};addMessage(nickname,text,isTeacher);bubble(text,isTeacher?'teacher':'student',user?.id);await channel.send({type:'broadcast',event:'room-chat',payload});$('chatInput').value=''}
+async function sendChat(text){
+ text=text.trim();if(!text||!channel||!joined)return;
+ if(isTeacher===false&&text.length>240)return;
+ const payload={user_id:user?.id,name:nickname,text,teacher:isTeacher,at:new Date().toISOString()};
+ try{
+  const result=await channel.send({type:'broadcast',event:'room-chat',payload});
+  if(result==='error')throw new Error('Không gửi được tin nhắn Realtime');
+  addMessage(nickname,text,isTeacher);bubble(text,isTeacher?'teacher':'student',user?.id);
+  $('chatInput').value='';
+ }catch(e){console.error('[IKIGAI chat]',e);toast('Tin nhắn chưa gửi được. Hãy thử lại khi Realtime ổn định.')}
+}
 $('studentEnter').onclick=enterStudent;$('teacherEnter').onclick=enterTeacher;$('showTeacher').onclick=()=>{$('teacherLogin').classList.toggle('show');$('studentLogin').classList.toggle('hidden')};$('sendBtn').onclick=()=>sendChat($('chatInput').value);$('chatInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendChat($('chatInput').value)});
 $('chatTab').onclick=()=>{$('chatTab').classList.add('active');$('memberTab').classList.remove('active');$('messages').classList.remove('hidden')};$('memberTab').onclick=()=>{$('memberTab').classList.add('active');$('chatTab').classList.remove('active');const names=Object.values(people).flat();$('messages').innerHTML='';const seen=new Set();names.forEach(p=>{const id=p.user_id||p.id;if(seen.has(id))return;seen.add(id);const d=document.createElement('div');d.className='member-row';d.innerHTML='<span class="member-dot"></span><span>'+safe(p.role==='teacher'?'リー先生':(p.name||'Học viên'))+'</span><span style="margin-left:auto;color:#7b69a7">'+(p.role==='teacher'?'Giáo viên':'Học viên')+'</span>';$('messages').appendChild(d)});if(!names.length)$('messages').textContent='Đang chờ thành viên kết nối…';};
 document.querySelectorAll('[data-quick]').forEach(b=>b.onclick=()=>sendChat(b.dataset.quick));document.querySelectorAll('[data-emote]').forEach(b=>b.onclick=async()=>{bubble(nickname+' '+b.dataset.emote,'student');if(channel)await channel.send({type:'broadcast',event:'room-emote',payload:{user_id:user?.id,name:nickname,emote:b.dataset.emote}})});
