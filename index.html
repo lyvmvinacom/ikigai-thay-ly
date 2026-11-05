@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#24164f">
-<title>IKIGAI WORLD — Anime Classroom</title>
+<title>IKIGAI WORLD — Anime Classroom v2.4</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
@@ -103,6 +103,19 @@
 .garden:after{content:"🌸　🌿　🌺　🌱　🌸";position:absolute;right:3%;top:4%;font-size:clamp(18px,2.5vw,32px);white-space:nowrap}
 @media(max-width:700px){.board{left:12%;top:18%;width:52%;height:22%;font-size:clamp(18px,5vw,28px)}.scene:before{left:10%;top:43%;width:48%;height:10%;font-size:20px}.windowwall:after{left:42%;border-left:50px solid transparent;border-right:50px solid transparent;border-bottom:90px solid #f8fbff}}
 
+
+/* v2.4 – polished full-body anime chibi character system */
+.wardrobe{margin:10px 0 4px;text-align:left;background:#f5efff;border:1px solid #e0d3ff;border-radius:14px;padding:9px}
+.wardrobe label{display:block;font-size:11px;font-weight:1000;color:#6344b3;margin:4px 0}
+.wardrobe-options{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px}
+.wardrobe-options button{padding:6px 9px;border:1px solid #d7c8f4;background:white;color:#59418d;border-radius:9px;font-size:10px;font-weight:900}
+.wardrobe-options button.active{background:#6944c6;color:white;border-color:#6944c6}
+.avatar-option{width:82px;height:105px}.avatar-option svg{height:90px;width:64px}
+.character .avatar svg{max-height:190px;overflow:visible}
+.character.teacher-char .avatar svg{max-height:205px}
+.character .avatar{min-height:155px}
+@media(max-width:760px){.avatar-option{width:67px;height:86px}.avatar-option svg{height:72px;width:52px}.character .avatar{min-height:110px}.character .avatar svg{max-height:130px}.character.teacher-char .avatar svg{max-height:140px}.wardrobe{padding:6px}.wardrobe-options button{font-size:9px;padding:5px 7px}}
+
 </style></head>
 <body><div id="app">
 <div class="scene"><div class="sun"></div><div class="windowwall"><div class="garden"></div></div><div class="curtain left"></div><div class="curtain right"></div><div class="floor"></div><div class="board">IKIGAI<br>日本語クラス N5</div><div class="sakura">🌸</div></div>
@@ -118,6 +131,7 @@
 <div class="gender-pick"><button type="button" class="gender-btn active" data-gender="male">Nam ♂</button><button type="button" class="gender-btn" data-gender="female">Nữ ♀</button></div>
 <div class="avatar-picker"><button type="button" id="avatarPrev" aria-label="Mẫu trước">‹</button><div id="avatarChoices"></div><button type="button" id="avatarNext" aria-label="Mẫu tiếp">›</button></div>
 <div class="avatar-caption" id="avatarCaption">Mẫu nhân vật 1</div>
+<div class="wardrobe"><label>👕 Trang phục</label><div id="outfitChoices" class="wardrobe-options"></div><label>😊 Biểu cảm</label><div id="faceChoices" class="wardrobe-options"></div></div>
 <button class="primary" id="studentEnter" style="width:100%">VÀO LỚP HỌC ▶</button>
 </div><button class="subtle" id="showTeacher" style="width:100%;margin-top:8px">👑 Đăng nhập Giáo viên</button><div class="teacher-login" id="teacherLogin"><input id="teacherEmail" type="email" placeholder="Email giáo viên"><input id="teacherPassword" type="password" placeholder="Mật khẩu"><button class="primary" id="teacherEnter" style="width:100%">ĐĂNG NHẬP GIÁO VIÊN</button><p style="font-size:11px">Tài khoản giáo viên phải được cấp quyền teacher trong Supabase.</p></div><p id="loginStatus" style="min-height:18px"></p></div></div>
 </div>
@@ -128,7 +142,7 @@ const SUPABASE_ANON_KEY='sb_publishable_IETjbMWeJthqXscH9fkrXg_x2QZiL8D';
 const ROOM='N5-01'; const TEACHER_ROLE='teacher';
 const $=id=>document.getElementById(id); const safe=(s)=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let client=null,channel=null,user=null,nickname='Học viên',isTeacher=false,joined=false,xp=0,coins=0,people={},chatHistory=[],currentTopic=null,qIndex=0,score=0,wrongCount=0,selected=-1,answered=false,reconnectTimer=null,reconnectAttempts=0,roomEpoch=0,positionSendAt=0,positionSendPending=false;
-let myPos={x:48,y:70},keysDown={},moveTimer=null,lastTrack=0,avatarMap={},studentGender='male',studentAvatar=0,pendingBubbles={};
+let myPos={x:48,y:70},keysDown={},moveTimer=null,lastTrack=0,avatarMap={},studentGender='male',studentAvatar=0,studentOutfit=0,studentExpression=0,pendingBubbles={};
 const localKey='ikigai_anime_v1';try{const s=JSON.parse(localStorage.getItem(localKey)||'{}');xp=s.xp||0;coins=s.coins||0}catch(e){}
 function save(){try{localStorage.setItem(localKey,JSON.stringify({xp,coins}))}catch(e){}$('xp').textContent=xp;$('coins').textContent=coins;$('level').textContent=Math.floor(xp/100)+1}
 save();function toast(t){$('toast').textContent=t;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2600)}
@@ -148,23 +162,36 @@ function bubble(text,who='teacher',id=null,attempt=0){
 }
 function addMessage(name,text,teacher=false,time=new Date()){const d=document.createElement('div');d.className='msg'+(teacher?' teacher':'');const tm=time.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});d.innerHTML='<b>'+safe(name)+'</b><small>'+tm+'</small><br>'+safe(text);$('messages').appendChild(d);$('messages').scrollTop=$('messages').scrollHeight;}
 function setupClient(){if(!window.supabase){$('loginStatus').textContent='Không tải được thư viện kết nối. Kiểm tra Internet.';return false}client=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);return true}
-async function enterStudent(){nickname=$('studentName').value.trim();studentGender=selectedGender;studentAvatar=selectedAvatar;if(!nickname){$('loginStatus').textContent='Em hãy nhập tên trước nhé!';return}if(!setupClient())return;$('studentEnter').disabled=true;$('loginStatus').textContent='Đang kết nối lớp học...';try{let {data:{session}}=await client.auth.getSession();if(!session){const r=await client.auth.signInAnonymously();if(r.error)throw r.error;session=r.data.session}user=session.user;isTeacher=false;await enterRoom()}catch(e){$('loginStatus').textContent='Lỗi kết nối: '+e.message;$('studentEnter').disabled=false}}
+async function enterStudent(){nickname=$('studentName').value.trim();studentGender=selectedGender;studentAvatar=selectedAvatar;studentOutfit=selectedOutfit;studentExpression=selectedExpression;if(!nickname){$('loginStatus').textContent='Em hãy nhập tên trước nhé!';return}if(!setupClient())return;$('studentEnter').disabled=true;$('loginStatus').textContent='Đang kết nối lớp học...';try{let {data:{session}}=await client.auth.getSession();if(!session){const r=await client.auth.signInAnonymously();if(r.error)throw r.error;session=r.data.session}user=session.user;isTeacher=false;await enterRoom()}catch(e){$('loginStatus').textContent='Lỗi kết nối: '+e.message;$('studentEnter').disabled=false}}
 async function enterTeacher(){const email=$('teacherEmail').value.trim(),password=$('teacherPassword').value;if(!email||!password){$('loginStatus').textContent='Nhập email và mật khẩu giáo viên.';return}if(!setupClient())return;$('teacherEnter').disabled=true;$('loginStatus').textContent='Đang xác thực giáo viên...';try{const {data,error}=await client.auth.signInWithPassword({email,password});if(error)throw error;user=data.user;isTeacher=user.app_metadata?.role===TEACHER_ROLE;if(!isTeacher){await client.auth.signOut();throw new Error('Tài khoản đã đăng nhập nhưng chưa được cấp quyền teacher. Hãy thực hiện bước cấp quyền trong README.')}nickname='リー先生';studentGender='male';studentAvatar=0;await enterRoom()}catch(e){$('loginStatus').textContent=e.message;$('teacherEnter').disabled=false}}
-function chibiSVG(kind='student',variant=0,gender='male'){
- const teacher=kind==='teacher';
- const hair=teacher?'#29243d':['#49324b','#2d2638','#6b3c32','#2b354b'][variant%4];
- const female=gender==='female'&&!teacher; const shirt=teacher?'#315c75':(female?['#f08eb6','#a68be8','#f4b86b','#75cbd4'][variant%4]:['#65cbb5','#6b91d8','#e5b45f','#70a8dc'][variant%4]);
- const bottom=teacher?'#27324c':(female?['#34466d','#394a70','#34466d','#394a70'][variant%4]:['#38435c','#34344c','#3b4356','#34364a'][variant%4]);
- const hairShape=teacher?'<path d="M28 34 Q25 7 50 8 Q76 8 73 39 L68 31 Q51 22 34 34 L31 45Z" fill="#29243d"/>':'<path d="M27 38 Q23 9 50 9 Q77 9 74 39 L69 31 Q52 23 34 34 L31 48Z" fill="'+hair+'"/>';
- const teacherAcc=teacher?'<path d="M31 12 L50 2 L69 12 L50 18Z" fill="#24243c"/><path d="M38 14 L62 14 L58 20 L42 20Z" fill="#e8c66b"/>':(female?'<path d="M69 23 Q86 48 76 91 Q70 111 62 113 L66 62Z" fill="'+hair+'"/><path d="M29 24 Q12 48 23 91 Q28 108 37 112 L34 63Z" fill="'+hair+'"/><path d="M68 22 Q77 15 80 26 Q78 36 67 34Z" fill="#f08eb6"/>':'<path d="M27 35 Q16 48 24 66 L31 53Z" fill="'+hair+'"/>');
- return `<svg viewBox="0 0 100 160" role="img" aria-label="${teacher?'リー先生':'Học viên'}"><ellipse cx="50" cy="151" rx="29" ry="6" fill="#7fdde7" opacity=".35"/>${female?`<path d="M29 111 L71 111 L79 132 Q50 140 21 132Z" fill="${bottom}" stroke="#24243c" stroke-width="2"/><path d="M39 130 L36 145 L46 145 L50 132Z M54 132 L58 145 L68 145 L63 130Z" fill="#f2c49f" stroke="#573e43" stroke-width="1.5"/>`:`<path d="M38 112 L34 139 Q34 145 42 145 L48 145 L50 117Z" fill="${bottom}" stroke="#24243c" stroke-width="2"/><path d="M52 117 L54 145 L62 145 Q69 144 66 137 L62 112Z" fill="${bottom}" stroke="#24243c" stroke-width="2"/>`}<path d="M34 143 L47 143 L47 150 L31 150 Q28 147 34 143Z M55 143 L67 143 L72 150 L55 150Z" fill="#29283b"/><path d="M30 73 Q50 61 70 73 L74 116 Q50 128 26 116Z" fill="${shirt}" stroke="#33405a" stroke-width="2"/><path d="M31 78 L19 103 Q17 109 23 111 L31 96 M69 78 L81 103 Q83 109 77 111 L69 96" fill="${shirt}" stroke="#33405a" stroke-width="5" stroke-linecap="round"/><path d="M44 72 L50 87 L56 72" fill="#fff"/><path d="M47 85 L50 105 L54 85" fill="#f5d36e"/><rect x="43" y="57" width="14" height="19" rx="6" fill="#f2c49f"/><ellipse cx="50" cy="40" rx="24" ry="29" fill="#ffd7b5" stroke="#573e43" stroke-width="2"/>${hairShape}${teacherAcc}<ellipse cx="41" cy="44" rx="3" ry="4" fill="#29243d"/><ellipse cx="59" cy="44" rx="3" ry="4" fill="#29243d"/><path d="M44 55 Q50 61 56 55" fill="none" stroke="#b75d68" stroke-width="2.5" stroke-linecap="round"/><circle cx="34" cy="53" r="4" fill="#f39e9e" opacity=".65"/><circle cx="66" cy="53" r="4" fill="#f39e9e" opacity=".65"/><path d="M28 34 Q31 17 50 17 Q68 17 72 34" fill="none" stroke="${hair}" stroke-width="7" stroke-linecap="round"/></svg>`;
+function chibiSVG(kind='student',variant=0,gender='male',outfit=0,expression=0){
+ const teacher=kind==='teacher',female=gender==='female'&&!teacher;
+ const hairSet=['#493047','#29344b','#8a4b35','#d7a34d','#6a4b83','#253b36','#a85f79','#3e3040'];
+ const hair=teacher?'#29243d':hairSet[(variant+hairSet.length)%hairSet.length];
+ const skin=['#ffe0c5','#f7cba9','#ffdfca','#edbd9d'][variant%4];
+ const shirts=['#315c75','#e986ad','#66bfae','#8b79d5','#e9ad58','#e7eef7','#d75e63','#426caa'];
+ const shirt=teacher?'#244b68':shirts[(outfit+variant)%shirts.length];
+ const bottoms=['#27324c','#33466c','#4d405c','#293a43','#76513b','#27364b'];
+ const bottom=teacher?'#27324c':bottoms[(outfit+variant)%bottoms.length];
+ const hairTop=teacher?'<path d="M23 43 Q18 7 50 7 Q82 7 77 46 L69 35 Q52 24 32 38 L27 55Z" fill="#29243d"/><path d="M25 31 Q35 5 56 11 Q70 12 77 31 Q57 23 42 27Z" fill="#39314f"/>':
+  `<path d="M20 48 Q14 9 49 7 Q84 7 80 49 L75 39 Q69 29 60 31 Q43 18 28 39Z" fill="${hair}" stroke="#382b40" stroke-width="2"/><path d="M25 34 Q31 10 51 13 Q69 10 77 34 Q63 27 53 31 Q38 25 25 43Z" fill="${hair}"/>`;
+ const longHair=female?`<path d="M25 35 Q10 55 18 102 Q21 125 34 128 L33 67Z M74 34 Q91 55 82 103 Q79 125 66 128 L67 66Z" fill="${hair}" stroke="#382b40" stroke-width="2"/><path d="M70 28 Q91 17 87 42 Q78 48 68 39Z" fill="#f6a6c9" stroke="#fff" stroke-width="2"/>`:'';
+ const mouth=expression%5===1?'<path d="M43 58 Q50 51 57 58" fill="none" stroke="#a94e61" stroke-width="3" stroke-linecap="round"/>':expression%5===2?'<ellipse cx="50" cy="58" rx="4" ry="6" fill="#a94e61"/>':expression%5===3?'<path d="M43 56 Q50 65 57 56" fill="none" stroke="#a94e61" stroke-width="3" stroke-linecap="round"/>':'<path d="M42 55 Q50 66 58 55 Q50 61 42 55" fill="#c85d70" stroke="#9f4659" stroke-width="1"/>';
+ const eyes=expression%5===4?'<path d="M35 46 Q41 40 46 46 M54 46 Q60 40 65 46" fill="none" stroke="#342b42" stroke-width="3" stroke-linecap="round"/>':'<ellipse cx="40" cy="46" rx="5" ry="7" fill="#28263c"/><ellipse cx="60" cy="46" rx="5" ry="7" fill="#28263c"/><circle cx="42" cy="43" r="2" fill="white"/><circle cx="62" cy="43" r="2" fill="white"/><path d="M34 38 Q40 34 46 38 M54 38 Q60 34 66 38" fill="none" stroke="#493047" stroke-width="2.5" stroke-linecap="round"/>';
+ const skirt=female?`<path d="M29 108 L71 108 L82 137 Q50 147 18 137Z" fill="${bottom}" stroke="#263044" stroke-width="2"/><path d="M27 116 L73 116 M23 128 L77 128" stroke="#fff" stroke-opacity=".45" stroke-width="2"/>`:`<path d="M34 108 L49 109 L47 143 L31 143Z M52 109 L68 108 L71 143 L54 143Z" fill="${bottom}" stroke="#263044" stroke-width="2"/>`;
+ const backpack=!teacher?'<path d="M23 83 Q12 86 15 112 L28 118 L34 91Z" fill="#e7a94d" stroke="#573d43" stroke-width="2"/>':'';
+ const accessory=teacher?'<path d="M28 12 L50 2 L72 12 L50 19Z" fill="#24243c" stroke="#17152a" stroke-width="2"/><path d="M37 15 L63 15 L58 20 L42 20Z" fill="#f3d26f"/>':(variant%4===2?'<path d="M70 28 Q85 19 83 35 Q77 42 69 35Z" fill="#ffcf65" stroke="#fff" stroke-width="2"/>':'');
+ const jacket=outfit%6===1||outfit%6===3?`<path d="M30 76 L21 105 L30 111 L38 91 L38 117 L62 117 L62 91 L70 111 L79 105 L70 76 L60 70 L50 83 L40 70Z" fill="${shirt}" stroke="#33405a" stroke-width="2"/>`:`<path d="M31 75 Q50 65 69 75 L73 116 Q50 127 27 116Z" fill="${shirt}" stroke="#33405a" stroke-width="2"/>`;
+ const tie=teacher||outfit%6===0?'<path d="M44 72 L50 84 L56 72 L53 104 L50 109 L47 104Z" fill="#f5d36e" stroke="#fff" stroke-width="1"/>':'';
+ const shoes=teacher?'<path d="M29 141 L47 141 L48 151 L25 151 Q22 146 29 141Z M54 141 L71 141 L76 151 L53 151Z" fill="#25253a"/>':'<path d="M29 140 L47 140 L48 151 L24 151 Q22 146 29 140Z M54 140 L71 140 L77 151 L53 151Z" fill="#fff" stroke="#42334b" stroke-width="2"/><path d="M27 147 L45 147 M56 147 L73 147" stroke="#e77ca8" stroke-width="2"/>';
+ return `<svg viewBox="0 0 100 160" role="img" aria-label="${teacher?'リー先生':'Anime chibi'}"><defs><linearGradient id="skin${variant}${outfit}" x2="0" y2="1"><stop stop-color="#fff0df"/><stop offset="1" stop-color="${skin}"/></linearGradient><linearGradient id="cloth${variant}${outfit}" x2="0" y2="1"><stop stop-color="#ffffff" stop-opacity=".28"/><stop offset="1" stop-color="#17152a" stop-opacity=".12"/></linearGradient></defs><ellipse cx="50" cy="153" rx="31" ry="5" fill="#65dce9" opacity=".42"/>${backpack}${skirt}<path d="M36 139 L35 146 L46 146 L48 138 M54 138 L56 146 L67 146 L65 138" fill="${skin}"/>${shoes}<path d="M31 76 Q50 65 69 76 L74 116 Q50 128 26 116Z" fill="${shirt}" stroke="#33405a" stroke-width="2"/>${tie}<path d="M32 82 L21 104 Q18 111 25 113 L34 96 M68 82 L79 104 Q82 111 75 113 L66 96" fill="none" stroke="${shirt}" stroke-width="9" stroke-linecap="round"/><path d="M32 82 L21 104 Q18 111 25 113 M68 82 L79 104 Q82 111 75 113" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="2"/><path d="M43 69 L57 69 L58 81 L42 81Z" fill="${skin}"/><ellipse cx="50" cy="43" rx="27" ry="32" fill="url(#skin${variant}${outfit})" stroke="#6d4b50" stroke-width="1.7"/>${longHair}${hairTop}${accessory}${eyes}${mouth}<ellipse cx="31" cy="56" rx="6" ry="3.5" fill="#f28d9e" opacity=".7"/><ellipse cx="69" cy="56" rx="6" ry="3.5" fill="#f28d9e" opacity=".7"/><path d="M28 34 Q33 13 51 15 Q68 12 73 34" fill="none" stroke="#ffffff" stroke-opacity=".18" stroke-width="3"/><path d="M38 88 L50 96 L62 88" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="2"/>${!teacher&&outfit%3===2?'<path d="M43 90 L57 90 L56 111 L44 111Z" fill="#f8e6a4" stroke="#fff" stroke-width="1"/><text x="50" y="103" font-size="7" text-anchor="middle" fill="#6b4a9c" font-weight="bold">N5</text>':''}</svg>`;
 }
 function renderPeople(){
  const chars=$('characters');if(!chars)return;
  const list=Object.values(people||{}).flat();
  // Keep the current player visible locally while Presence is syncing.
  if(user&&!list.some(p=>(p.user_id||p.id)===user.id)){
-  list.push({user_id:user.id,name:nickname,role:isTeacher?'teacher':'student',gender:studentGender,avatar:studentAvatar,x:myPos.x,y:myPos.y,xp});
+  list.push({user_id:user.id,name:nickname,role:isTeacher?'teacher':'student',gender:studentGender,avatar:studentAvatar,outfit:studentOutfit,expression:studentExpression,x:myPos.x,y:myPos.y,xp});
  }
  const teacherOnline=list.find(p=>p.role==='teacher');
  const activeIds=new Set();
@@ -174,13 +201,13 @@ function renderPeople(){
  let teacherEl=chars.querySelector('.teacher-char');
  if(!teacherEl){teacherEl=document.createElement('div');teacherEl.className='character teacher-char';teacherEl.dataset.userId='teacher-npc';teacherEl.innerHTML='<div class="speech"></div><div class="avatar"></div><div class="halo"></div><div class="nameplate"></div>';chars.appendChild(teacherEl)}
  teacherEl.dataset.userId=teacherId;teacherEl.classList.add('teacher-char');
- const t=teacherOnline||{};teacherEl.querySelector('.avatar').innerHTML=chibiSVG('teacher');teacherEl.querySelector('.nameplate').textContent='👑 リー先生';
+ const t=teacherOnline||{};teacherEl.querySelector('.avatar').innerHTML=chibiSVG('teacher',0,'male',0,0);teacherEl.querySelector('.nameplate').textContent='👑 リー先生';
  teacherEl.style.left=String(t.x??50)+'%';teacherEl.style.top=String(t.y??34)+'%';
  list.forEach((p,i)=>{
   const id=String(p.user_id||p.id||'');if(!id||p.role==='teacher')return;activeIds.add(id);
   let el=chars.querySelector(`[data-user-id="${CSS.escape(id)}"]`);
   if(!el){el=document.createElement('div');el.className='character';el.dataset.userId=id;el.innerHTML='<div class="speech"></div><div class="avatar"></div><div class="halo"></div><div class="nameplate"></div>';chars.appendChild(el)}
-  el.querySelector('.avatar').innerHTML=chibiSVG('student',Number(p.avatar??i),p.gender||'male');el.querySelector('.nameplate').textContent=p.name||'Học viên';
+  el.querySelector('.avatar').innerHTML=chibiSVG('student',Number(p.avatar??i),p.gender||'male',Number(p.outfit||0),Number(p.expression||0));el.querySelector('.nameplate').textContent=p.name||'Học viên';
   el.style.left=String(p.x??(25+(i%4)*17))+'%';el.style.top=String(p.y??68)+'%';el.classList.toggle('moving',!!p.moving);
  });
  [...chars.querySelectorAll('.character')].forEach(el=>{if(!activeIds.has(el.dataset.userId))el.remove()});
@@ -190,7 +217,7 @@ function renderPeople(){
 async function trackPresence(){
  if(!channel||!joined||!user)return;
  try{
-  const result=await channel.track({user_id:user.id,name:nickname,role:isTeacher?'teacher':'student',gender:studentGender,avatar:studentAvatar,x:myPos.x,y:myPos.y,xp,online_at:new Date().toISOString()});
+  const result=await channel.track({user_id:user.id,name:nickname,role:isTeacher?'teacher':'student',gender:studentGender,avatar:studentAvatar,outfit:studentOutfit,expression:studentExpression,x:myPos.x,y:myPos.y,xp,online_at:new Date().toISOString()});
   if(result&&result==='error')throw new Error('Presence track returned error');
  }catch(e){console.warn('[IKIGAI] Presence profile error:',e)}
 }
@@ -243,17 +270,27 @@ function setupMovement(){
 }
 setupMovement();
 
-let selectedGender='male',selectedAvatar=0;
-const avatarNames={male:['Nam sinh','Năng động','Học giả','Thể thao'],female:['Nữ sinh','Dịu dàng','Năng động','Thời trang']};
+let selectedGender='male',selectedAvatar=0,selectedOutfit=0,selectedExpression=0;
+const avatarNames={male:['Nam sinh','Năng động','Học giả','Thể thao','Senpai','Street style','Mùa đông','Yukata'],female:['Nữ sinh','Dịu dàng','Năng động','Thời trang','Idol','Street style','Mùa đông','Yukata']};
 function renderAvatarChoices(){
  const host=$('avatarChoices');if(!host)return;host.innerHTML='';
- [0,1,2].forEach(offset=>{const idx=(selectedAvatar+offset)%4;const b=document.createElement('button');b.type='button';b.className='avatar-option'+(offset===0?' selected':'');b.innerHTML=chibiSVG('student',idx,selectedGender);b.title=avatarNames[selectedGender][idx];b.onclick=()=>{selectedAvatar=idx;renderAvatarChoices()};host.appendChild(b)});
+ [0,1,2].forEach(offset=>{const idx=(selectedAvatar+offset)%8;const b=document.createElement('button');b.type='button';b.className='avatar-option'+(offset===0?' selected':'');b.innerHTML=chibiSVG('student',idx,selectedGender,selectedOutfit,selectedExpression);b.title=avatarNames[selectedGender][idx];b.onclick=()=>{selectedAvatar=idx;renderAvatarChoices()};host.appendChild(b)});
  $('avatarCaption').textContent=avatarNames[selectedGender][selectedAvatar]+' · Mẫu '+(selectedAvatar+1);
 }
-document.querySelectorAll('[data-gender]').forEach(b=>b.onclick=()=>{selectedGender=b.dataset.gender;document.querySelectorAll('[data-gender]').forEach(x=>x.classList.toggle('active',x===b));selectedAvatar=0;renderAvatarChoices()});
-$('avatarPrev').onclick=()=>{selectedAvatar=(selectedAvatar+3)%4;renderAvatarChoices()};
-$('avatarNext').onclick=()=>{selectedAvatar=(selectedAvatar+1)%4;renderAvatarChoices()};
+document.querySelectorAll('[data-gender]').forEach(b=>b.onclick=()=>{selectedGender=b.dataset.gender;document.querySelectorAll('[data-gender]').forEach(x=>x.classList.toggle('active',x===b));selectedAvatar=0;renderAvatarChoices();renderStyleChoices()});
+$('avatarPrev').onclick=()=>{selectedAvatar=(selectedAvatar+7)%8;renderAvatarChoices()};
+$('avatarNext').onclick=()=>{selectedAvatar=(selectedAvatar+1)%8;renderAvatarChoices()};
 renderAvatarChoices();
+const outfitLabels=['Đồng phục','Hoodie','Áo N5','Cardigan','Áo khoác','Yukata'];
+const faceLabels=['Vui vẻ','Nháy mắt','Ngạc nhiên','Cười lớn','Tinh nghịch'];
+function renderStyleChoices(){
+ const outfits=$('outfitChoices'),faces=$('faceChoices');if(!outfits||!faces)return;
+ outfits.innerHTML=outfitLabels.map((x,i)=>`<button type="button" class="${i===selectedOutfit?'active':''}" data-outfit="${i}">${x}</button>`).join('');
+ faces.innerHTML=faceLabels.map((x,i)=>`<button type="button" class="${i===selectedExpression?'active':''}" data-face="${i}">${x}</button>`).join('');
+ outfits.querySelectorAll('[data-outfit]').forEach(b=>b.onclick=()=>{selectedOutfit=Number(b.dataset.outfit);renderStyleChoices();renderAvatarChoices()});
+ faces.querySelectorAll('[data-face]').forEach(b=>b.onclick=()=>{selectedExpression=Number(b.dataset.face);renderStyleChoices();renderAvatarChoices()});
+}
+renderStyleChoices();
 
 function scheduleRoomReconnect(reason='connection-lost',epoch=roomEpoch){
  if(epoch!==roomEpoch||reconnectTimer)return;
