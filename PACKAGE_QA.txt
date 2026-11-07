@@ -1,0 +1,28 @@
+IKIGAI WORLD 9.0 — PACKAGE QA REPORT
+===================================
+Source: ikigainohongo-main (3).zip (commit 5c1e62e36c78f1cd15ec1f09e4a7c7a5da8a9c09)
+
+Completed repairs:
+1. Unified asset cache versions in index.html (9.0-art-integration).
+2. Verified the seven map layers are 1600x1000 and ordered according to manifest.json.
+3. Verified the seven building PNGs exist and are valid RGBA images.
+4. Upscaled the seven room illustrations to 3x using Lanczos resampling, mild contrast/color correction, and unsharp masking. Original composition/content preserved.
+5. Changed room background fitting to fill the interior canvas without cover-cropping.
+6. Added subtle moving room-light overlay while keeping room controls, players, speech bubbles, stations, and chat above the art.
+7. Fixed Presence rendering so static teacher NPC リー先生 is not removed when remote room players refresh.
+8. Removed unreferenced 1-byte placeholder files.
+9. Preserved Supabase URL/key, SQL schema, authentication/profile/reward logic, chat, arena queue, and N5 question bank.
+
+Validation performed:
+- Node.js syntax check: app.js PASS.
+- Local asset reference scan across index.html, style.css, app.js: PASS (0 missing references).
+- JSON parse: assets/ikigai-n5-bank.json and assets/map-layers/manifest.json PASS.
+- SVG XML parse: assets/ikigai-world-map.svg and map layer SVG files PASS.
+- Image decode verification: all PNG/JPG assets PASS.
+- Layer dimensions: all seven map PNGs are 1600x1000 PASS.
+- ZIP integrity test: PASS.
+
+Limitations:
+- Room JPG upscaling improves display resolution but cannot recreate details absent from source images.
+- Real Supabase multi-device behavior, credentials, and GitHub Pages deployment must be tested on the live site; they cannot be authenticated by this offline package validation.
+- This uploaded source archive did not contain assets/jft/. If that folder exists in the live repository, preserve it when merging assets.

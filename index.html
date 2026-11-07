@@ -1,27 +1,50 @@
-<!doctype html>
-<html lang="vi">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#24164f">
-<title>IKIGAI WORLD — N5 Learning World v3.0</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<link rel="stylesheet" href="style.css?v=4.0"></head>
-<body><div id="app">
-<div class="scene"><div class="sun"></div><div class="windowwall"><div class="garden"></div></div><div class="curtain left"></div><div class="curtain right"></div><div class="floor"></div><div class="board">IKIGAI<br>日本語クラス N5</div><div class="sakura">🌸</div></div>
-<div class="topbar"><div class="brand"><div class="logo">∞</div><div><b>IKIGAI WORLD</b><small>ANIME EDITION · N5 QUEST</small></div></div><div class="roompill">🏠 LỚP HỌC N5-01 · <span id="onlineCount">1</span> người</div><div class="connection-pill" id="connectionStatus">● Chưa kết nối</div><div class="stats"><span>⭐ <em id="xp">0</em> XP</span><span>🪙 <em id="coins">0</em></span><span>🏅 Lv.<em id="level">1</em></span></div></div>
-<div class="side"><button id="lessonBtn">📚 Bài học</button><button id="practiceBtn">✏️ Luyện tập</button><button id="quizBtn">🎓 Thi JFT A2</button><button id="taskBtn">🎯 Nhiệm vụ</button><button id="rankBtn">🏆 BXH</button><button id="teacherBtn" class="hidden">👑 Giáo viên</button></div>
-<div class="main" id="characters" aria-label="Nhân vật trong lớp học"></div><div class="joystick" id="joystick" aria-label="Điều khiển di chuyển"><div class="joy-base"><div class="joy-stick" id="joyStick"></div></div></div>
-<div class="rightpanel"><div class="tabs"><button class="active" id="chatTab">💬 Trò chuyện</button><button id="memberTab">👥 Thành viên</button></div><div class="messages" id="messages"><div class="msg teacher"><b>リー先生</b><small>Hệ thống</small><br>みなさん、こんにちは！ Chào mừng các em đến IKIGAI WORLD 🌸</div></div><div class="teacher-tools" id="teacherTools"><button data-quick="Cả lớp chú ý nhé! 📣">📣 Thông báo</button><button data-quick="Các em hãy hoàn thành bài tập nhé! 📝">📝 Giao bài</button><button data-quick="すばらしい！ Các em làm rất tốt! 🌟">🌟 Khen lớp</button></div><div class="compose"><input id="chatInput" placeholder="Nhập tin nhắn..." maxlength="240"><button class="send" id="sendBtn">➤</button></div></div>
-<div class="bottom"><div class="glass hintbottom">💡 Di chuyển đến gần リー先生 để nhận nhiệm vụ</div><div class="emotes"><button data-emote="👏">👏</button><button data-emote="👍">👍</button><button data-emote="❤️">❤️</button><button data-emote="😮">😮</button><button data-emote="😂">😂</button></div><div class="glass voice" id="speakBtn">🎤 Nói</div></div>
-<div class="toast" id="toast"></div>
-<div class="panel" id="panel"><div class="panelhead"><div><small style="color:#8b70ce;font-weight:1000">IKIGAI QUEST</small><h2 id="panelTitle">Nhiệm vụ</h2></div><button class="close" id="closePanel">×</button></div><div id="panelBody"></div></div>
-<div class="login" id="login"><div class="login-card"><div class="login-logo">🌸📚</div><h1>IKIGAI WORLD</h1><p>Thế giới học tiếng Nhật phong cách Anime<br>Chọn cách đăng nhập để vào lớp N5-01</p><div id="studentLogin">
-<input id="studentName" placeholder="Tên học viên" maxlength="24">
-<div class="gender-pick"><button type="button" class="gender-btn active" data-gender="male">Nam ♂</button><button type="button" class="gender-btn" data-gender="female">Nữ ♀</button></div>
-<div class="avatar-picker"><button type="button" id="avatarPrev" aria-label="Mẫu trước">‹</button><div id="avatarChoices"></div><button type="button" id="avatarNext" aria-label="Mẫu tiếp">›</button></div>
-<div class="avatar-caption" id="avatarCaption">Mẫu nhân vật 1</div>
-<div class="wardrobe"><label>👕 Trang phục</label><div id="outfitChoices" class="wardrobe-options"></div><label>😊 Biểu cảm</label><div id="faceChoices" class="wardrobe-options"></div></div>
-<button class="primary" id="studentEnter" style="width:100%">VÀO LỚP HỌC ▶</button>
-</div><button class="subtle" id="showTeacher" style="width:100%;margin-top:8px">👑 Đăng nhập Giáo viên</button><div class="teacher-login" id="teacherLogin"><input id="teacherEmail" type="email" placeholder="Email giáo viên"><input id="teacherPassword" type="password" placeholder="Mật khẩu"><button class="primary" id="teacherEnter" style="width:100%">ĐĂNG NHẬP GIÁO VIÊN</button><p style="font-size:11px">Tài khoản giáo viên phải được cấp quyền teacher trong Supabase.</p></div><p id="loginStatus" style="min-height:18px"></p></div></div>
-</div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script><script src="app.js?v=4.0"></script></body></html>
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#17313b"><title>IKIGAI WORLD 9.0 – Japanese Learning Adventure</title><link rel="stylesheet" href="style.css?v=9.0-art-integration"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script></head><body>
+<main id="game">
+<section id="mapScene" class="map-scene">
+ <div class="map-world-stage">
+ <div class="world-layers" aria-hidden="true">
+  <div class="map-art-stack" aria-label="Cảnh quan IKIGAI WORLD">
+   <img class="map-layer" src="assets/map-layers/01_terrain.png?v=9.0" alt="">
+   <img class="map-layer" src="assets/map-layers/02_water.png?v=9.0" alt="">
+   <img class="map-layer" src="assets/map-layers/03_paths_plaza.png?v=9.0" alt="">
+   <img class="map-layer" src="assets/map-layers/04_entrance_gate.png?v=9.0" alt="">
+   <img class="map-layer" src="assets/map-layers/05_vegetation.png?v=9.0" alt="">
+   <img class="map-layer" src="assets/map-layers/06_lanterns_bridges_props.png?v=9.0" alt="">
+   <img class="map-layer" src="assets/map-layers/07_atmosphere_effects.png?v=9.0" alt="">
+  </div>
+  <div class="map-atmosphere"></div><div class="map-water-glow"></div>
+  <div class="map-petals"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="map-fireflies"><i></i><i></i><i></i><i></i><i></i></div>
+ </div>
+ <div id="mapActors" class="actors"></div>
+ <div class="map-hotspots">
+  <img class="building-art building-class" src="assets/buildings/01_lop-hoc-ikigai.png?v=9.0" alt="" draggable="false">
+  <img class="building-art building-arena" src="assets/buildings/02_dau-truong.png?v=9.0" alt="" draggable="false">
+  <img class="building-art building-n5" src="assets/buildings/03_phong-luyen-thi-n5.png?v=9.0" alt="" draggable="false">
+  <img class="building-art building-n4" src="assets/buildings/04_phong-luyen-thi-n4.png?v=9.0" alt="" draggable="false">
+  <img class="building-art building-jft" src="assets/buildings/05_phong-luyen-thi-jft.png?v=9.0" alt="" draggable="false">
+  <img class="building-art building-gym" src="assets/buildings/06_phong-gym.png?v=9.0" alt="" draggable="false">
+  <img class="building-art building-director" src="assets/buildings/07_phong-giam-doc.png?v=9.0" alt="" draggable="false">
+  <button class="hotspot hotspot-class" data-place="class" aria-label="Lớp học IKIGAI"></button>
+  <button class="hotspot hotspot-arena" data-place="arena" aria-label="Đấu trường IKIGAI"></button>
+  <button class="hotspot hotspot-n5" data-place="n5" aria-label="Phòng luyện thi N5"></button>
+  <button class="hotspot hotspot-n4" data-place="n4" aria-label="Phòng luyện thi N4"></button>
+  <button class="hotspot hotspot-jft" data-place="jft" aria-label="Phòng luyện thi JFT"></button>
+  <button class="hotspot hotspot-gym" data-place="gym" aria-label="Phòng Gym"></button>
+  <button class="hotspot hotspot-director" data-place="tea" aria-label="Phòng Giám đốc"></button>
+ </div>
+ <div class="map-hud"><div class="identity"><span id="hudAvatar">🌸</span><span><b id="hudName">Học viên</b><small id="hudRole">IKIGAI WORLD</small></span></div><div class="resources"><span>⭐ <b id="xp">0</b> XP</span><span>🪙 <b id="coins">0</b></span><span>🏅 Lv.<b id="level">1</b></span><span class="online">🟢 <b id="onlineCount">1</b> online</span><small id="progressSource">Chưa đồng bộ</small></div></div>
+ <div class="map-tools"><button id="chatToggle">💬 Trò chuyện</button><button id="logoutBtn">↪ Thoát</button></div>
+ <div class="map-hint">Chạm vào công trình để khám phá · Người chơi chỉ xuất hiện bên trong phòng</div>
+</section>
+<section id="roomScene" class="room-scene" hidden></section>
+ <div class="chatbox" id="chatbox"><header>💬 Trò chuyện IKIGAI <button id="closeChat">×</button></header><div id="messages" class="messages"><p class="system-msg">🌸 Chào mừng đến IKIGAI WORLD!</p></div><form id="chatForm"><input id="chatInput" maxlength="240" placeholder="Nhắn tin với mọi người..."><button>➤</button></form></div>
+ <div class="memberbox" id="memberbox"><header>👥 Người đang ở thế giới <button id="closeMembers">×</button></header><div id="members"></div></div>
+
+<div id="placeModal" class="modal" hidden><div class="modal-card"><button class="modal-x" id="closePlace">×</button><small>KHÁM PHÁ IKIGAI WORLD</small><h2 id="placeTitle"></h2><p id="placeDescription"></p><button class="gold" id="enterPlace">Bước vào khu vực</button></div></div>
+<div id="activity" class="activity" hidden></div><div id="toast" class="toast"></div>
+<div id="login" class="login"><div class="login-card"><div class="sakura-logo">🌸</div><div class="eyebrow">JAPANESE LEARNING ADVENTURE</div><h1>IKIGAI WORLD</h1><p>Đăng nhập để gặp bạn bè, học tập và khám phá thế giới IKIGAI.</p>
+ <div class="login-tabs"><button class="selected" data-tab="student">🎒 Học viên</button><button data-tab="teacher">👑 Giáo viên</button></div>
+ <div id="studentForm"><label>Tên hiển thị trong game</label><input id="studentName" maxlength="24" placeholder="Ví dụ: Minh Anh"><label>Email tài khoản</label><input id="studentEmail" type="email" autocomplete="username" placeholder="email của bạn"><label>Mật khẩu</label><input id="studentPassword" type="password" autocomplete="current-password" placeholder="Tối thiểu 6 ký tự"><div class="gender-pick"><button class="selected" data-gender="male">Nam ♂</button><button data-gender="female">Nữ ♀</button></div><div class="avatar-pick"><button id="avatarPrev">‹</button><img id="avatarPreview" src="assets/characters/male_school.png"><button id="avatarNext">›</button></div><div class="login-actions"><button class="gold" id="studentSignIn">ĐĂNG NHẬP</button><button class="secondary" id="studentSignUp">TẠO TÀI KHOẢN</button></div><button class="guest" id="guestEnter">Vào thử không cần tài khoản</button></div>
+ <div id="teacherForm" hidden><label>Email giáo viên</label><input id="teacherEmail" type="email" autocomplete="username"><label>Mật khẩu</label><input id="teacherPassword" type="password" autocomplete="current-password"><button class="gold full" id="teacherSignIn">ĐĂNG NHẬP GIÁO VIÊN</button><p class="small-note">Tài khoản giáo viên cần được cấp role teacher trong Supabase.</p></div><p id="loginStatus" role="status"></p></div></div>
+</main><script src="app.js?v=9.0-art-integration"></script></body></html>
